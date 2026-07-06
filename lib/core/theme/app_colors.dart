@@ -21,6 +21,7 @@ class AppColors {
   static const Color accentAmberGlow = Color(0x40FBBF24);
 
   static const Color onAccent = Color(0xFF1A1408);
+  
 
   static const Color positive = Color(0xFF4ADE80);
   static const Color positiveBg = Color(0x1A4ADE80);

@@ -1,28 +1,99 @@
 // core/di/injection_container.dart
+import 'package:get_it/get_it.dart';
+
 import 'package:crypto_portfolio_tracker/core/local_storage/storage_service.dart';
 import 'package:crypto_portfolio_tracker/core/network/dio_client.dart';
-import 'package:crypto_portfolio_tracker/features/market/data/datasources/market_remote_datasource.dart';
-import 'package:crypto_portfolio_tracker/features/market/data/repositories/market_repository_impl.dart';
-import 'package:crypto_portfolio_tracker/features/market/domain/repositories/market_repository.dart';
-import 'package:crypto_portfolio_tracker/features/market/domain/usecases/get_top_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/core/data/datasources/coin_remote_datasource.dart';
+import 'package:crypto_portfolio_tracker/core/data/repositories/coin_repository_impl.dart';
+import 'package:crypto_portfolio_tracker/core/domain/repositories/coin_repository.dart';
+import 'package:crypto_portfolio_tracker/core/domain/usecases/get_top_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/home/presentation/cubit/home_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/market/presentation/cubit/market_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/onboarding/presentation/cubit/onboarding_cubit.dart';
-import 'package:get_it/get_it.dart';
+import 'package:crypto_portfolio_tracker/features/coin_detail/data/datasources/coin_detail_remote_datasource.dart';
+import 'package:crypto_portfolio_tracker/features/coin_detail/data/repositories/coin_detail_repository_impl.dart';
+import 'package:crypto_portfolio_tracker/features/coin_detail/domain/repositories/coin_detail_repository.dart';
+import 'package:crypto_portfolio_tracker/features/coin_detail/domain/usecases/get_coin_detail_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/coin_detail/domain/usecases/get_coin_chart_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/coin_detail/presentation/cubit/coin_detail_cubit.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/data/datasources/watchlist_local_datasource.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/data/repositories/watchlist_repository_impl.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/repositories/watchlist_repository.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/get_watchlist_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/add_to_watchlist_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/remove_from_watchlist_usecase.dart';
 
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
+  // Core / Network
   sl.registerLazySingleton<DioClient>(() => DioClient());
   sl.registerLazySingleton<StorageService>(() => StorageService());
+
+  // ===== Market feature =====
+  sl.registerLazySingleton<CoinRemoteDataSource>(
+    () => CoinRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<CoinRepository>(
+    () => CoinRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<GetTopCoinsUseCase>(() => GetTopCoinsUseCase(sl()));
+
+  // ===== Coin Detail feature =====
+  sl.registerLazySingleton<CoinDetailRemoteDataSource>(
+    () => CoinDetailRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<CoinDetailRepository>(
+    () => CoinDetailRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<GetCoinDetailUseCase>(
+    () => GetCoinDetailUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<GetCoinChartUseCase>(
+    () => GetCoinChartUseCase(sl()),
+  );
+
+  // ===== Watchlist feature =====
+  sl.registerLazySingleton<WatchlistLocalDataSource>(
+    () => WatchlistLocalDataSourceImpl(storageService: sl()),
+  );
+
+  sl.registerLazySingleton<WatchlistRepository>(
+    () => WatchlistRepositoryImpl(localDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<GetWatchlistUseCase>(
+    () => GetWatchlistUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<AddToWatchlistUseCase>(
+    () => AddToWatchlistUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<RemoveFromWatchlistUseCase>(
+    () => RemoveFromWatchlistUseCase(sl()),
+  );
 
   sl.registerFactory<OnboardingCubit>(
     () => OnboardingCubit(storageService: sl()),
   );
 
-  sl.registerLazySingleton<CoinRemoteDataSource>(
-    () => CoinRemoteDataSourceImpl(sl()),
-  );
-  sl.registerLazySingleton<CoinRepository>(() => CoinRepositoryImpl(sl()));
-  sl.registerLazySingleton<GetTopCoins>(() => GetTopCoins(sl()));
+  sl.registerFactory<HomeCubit>(() => HomeCubit(sl()));
+
   sl.registerFactory<MarketCubit>(() => MarketCubit(sl()));
+
+  sl.registerFactory<CoinDetailCubit>(
+    () => CoinDetailCubit(
+      getCoinDetail: sl(),
+      getCoinChart: sl(),
+      getWatchlist: sl(),
+      addToWatchlist: sl(),
+      removeFromWatchlist: sl(),
+    ),
+  );
 }

@@ -1,11 +1,15 @@
 // core/routes/app_router.dart
+import 'package:crypto_portfolio_tracker/core/shared/widgets/main_wrapper.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../features/home/presentation/cubit/home_cubit.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/market/presentation/cubit/market_cubit.dart';
-import '../../features/market/presentation/pages/home_page.dart';
+import '../../features/market/presentation/pages/market_page.dart';
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/coin_detail/presentation/pages/coin_detail_page.dart';
 import '../constants/app_constants.dart';
 import '../di/injection_container.dart';
 import '../local_storage/storage_service.dart';
@@ -13,7 +17,11 @@ import '../local_storage/storage_service.dart';
 class AppRouter {
   AppRouter._();
 
+  static final GlobalKey<NavigatorState> _rootNavigatorKey =
+      GlobalKey<NavigatorState>();
+
   static final GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: _getInitialLocation(),
     routes: [
       GoRoute(
@@ -24,11 +32,61 @@ class AppRouter {
         ),
       ),
       GoRoute(
-        path: '/home',
-        builder: (context, state) => BlocProvider(
-          create: (context) => sl<MarketCubit>()..fetchTopCoins(),
-          child: const HomePage(),
-        ),
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/coin/:coinId',
+        builder: (context, state) {
+          final coinId = state.pathParameters['coinId']!;
+          return CoinDetailPage(coinId: coinId);
+        },
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainWrapper(navigationShell: navigationShell);
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => BlocProvider(
+                  create: (context) => sl<HomeCubit>()..fetchTopCoins(),
+                  child: const HomePage(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/market',
+                builder: (context, state) => BlocProvider(
+                  create: (context) => sl<MarketCubit>()..fetchMarkets(),
+                  child: const MarketPage(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/watchlist',
+                builder: (context, state) => const Scaffold(
+                  body: Center(child: Text('Watchlist Page (Teorik)')),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/portfolio',
+                builder: (context, state) => const Scaffold(
+                  body: Center(child: Text('Portfolio Page (Teorik)')),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );
@@ -37,7 +95,6 @@ class AppRouter {
     final storage = sl<StorageService>();
     final seen =
         storage.readValue<bool>(AppConstants.storageKeyOnboardingSeen) ?? false;
-
     return seen ? '/home' : '/onboarding';
   }
 }

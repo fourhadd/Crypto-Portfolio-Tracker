@@ -1,7 +1,6 @@
 // features/market/presentation/cubit/market_state.dart
 import 'package:equatable/equatable.dart';
-
-import '../../domain/entities/coin_entity.dart';
+import '../../../../core/domain/entities/coin_entity.dart';
 
 abstract class MarketState extends Equatable {
   const MarketState();
@@ -19,13 +18,36 @@ class MarketLoading extends MarketState {
 }
 
 class MarketLoaded extends MarketState {
-  
   final List<CoinEntity> coins;
+  final String currentFilter;
+  final double? minPrice;
+  final double? maxPrice;
 
-  const MarketLoaded(this.coins);
+  const MarketLoaded(
+    this.coins, {
+    this.currentFilter = 'All',
+    this.minPrice,
+    this.maxPrice,
+  });
+
+  MarketLoaded copyWith({
+    List<CoinEntity>? coins,
+    String? currentFilter,
+    double? minPrice,
+    double? maxPrice,
+    bool clearMinPrice = false,
+    bool clearMaxPrice = false,
+  }) {
+    return MarketLoaded(
+      coins ?? this.coins,
+      currentFilter: currentFilter ?? this.currentFilter,
+      minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
+      maxPrice: clearMaxPrice ? null : (maxPrice ?? this.maxPrice),
+    );
+  }
 
   @override
-  List<Object?> get props => [coins];
+  List<Object?> get props => [coins, currentFilter, minPrice, maxPrice];
 }
 
 class MarketError extends MarketState {
