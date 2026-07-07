@@ -46,7 +46,7 @@ class CoinSelectorChip extends StatelessWidget {
                 child: Image.network(
                   imageUrl!,
                   width: 22.w,
-                  height: 22.w,
+                  height: 22.h,
                   errorBuilder: (_, __, ___) => Icon(
                     Icons.currency_bitcoin,
                     size: 22.w,

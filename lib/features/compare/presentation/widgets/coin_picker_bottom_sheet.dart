@@ -162,7 +162,7 @@ class _CoinPickerBottomSheetState extends State<CoinPickerBottomSheet> {
                                 child: Image.network(
                                   coin.image,
                                   width: 32.w,
-                                  height: 32.w,
+                                  height: 32.h,
                                   errorBuilder: (_, __, ___) => Icon(
                                     Icons.currency_bitcoin,
                                     size: 32.w,

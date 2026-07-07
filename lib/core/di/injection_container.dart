@@ -7,7 +7,6 @@ import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/is_c
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/watch_watchlist_coins_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/presentation/cubit/watchlist_cubit.dart';
 import 'package:get_it/get_it.dart';
-
 import 'package:crypto_portfolio_tracker/core/local_storage/storage_service.dart';
 import 'package:crypto_portfolio_tracker/core/network/dio_client.dart';
 import 'package:crypto_portfolio_tracker/core/data/datasources/coin_remote_datasource.dart';
@@ -135,7 +134,7 @@ Future<void> initDependencies() async {
     () => CoinDetailCubit(
       getCoinDetail: sl(),
       getCoinChart: sl(),
-      isCoinWatchlisted: sl(), // was: getWatchlist: sl(),
+      isCoinWatchlisted: sl(),
       addToWatchlist: sl(),
       removeFromWatchlist: sl(),
     ),

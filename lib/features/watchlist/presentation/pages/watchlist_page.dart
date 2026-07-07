@@ -58,7 +58,7 @@ class WatchlistPage extends StatelessWidget {
                     },
                   ),
                 ),
-                SizedBox(height: 100.h), // bottom nav bar üçün boşluq
+                SizedBox(height: 100.h),
               ],
             ),
           ),

@@ -16,7 +16,7 @@ class WatchlistEmptyState extends StatelessWidget {
         children: [
           Container(
             width: 88.w,
-            height: 88.w,
+            height: 88.h,
             decoration: BoxDecoration(
               color: AppColors.accentAmberGlow,
               borderRadius: BorderRadius.circular(24.r),

@@ -33,7 +33,7 @@ class WatchlistListItem extends StatelessWidget {
             child: Image.network(
               coin.image,
               width: 40.w,
-              height: 40.w,
+              height: 40.h,
               errorBuilder: (_, __, ___) => CircleAvatar(
                 radius: 20.w,
                 backgroundColor: AppColors.bgElevated,
@@ -96,7 +96,7 @@ class WatchlistListItem extends StatelessWidget {
             onTap: () => context.read<WatchlistCubit>().removeCoin(coin.id),
             child: Container(
               width: 36.w,
-              height: 36.w,
+              height: 36.h,
               decoration: const BoxDecoration(
                 color: AppColors.negativeBg,
                 shape: BoxShape.circle,

@@ -43,7 +43,7 @@ class WatchlistHeader extends StatelessWidget {
           onTap: () => context.go('/market'),
           child: Container(
             width: 44.w,
-            height: 44.w,
+            height: 44.h,
             decoration: BoxDecoration(
               color: AppColors.accentAmberGlow,
               shape: BoxShape.circle,

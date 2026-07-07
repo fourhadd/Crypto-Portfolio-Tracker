@@ -31,7 +31,7 @@ class ChartLegend extends StatelessWidget {
       children: [
         Container(
           width: 8.w,
-          height: 8.w,
+          height: 8.h,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         SizedBox(width: 6.w),

@@ -134,7 +134,7 @@ class _Glow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 44.w,
-      height: 44.w,
+      height: 44.h,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(
