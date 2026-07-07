@@ -1,4 +1,13 @@
 // core/di/injection_container.dart
+import 'package:crypto_portfolio_tracker/features/portfolio/data/datasources/portfolio_local_datasource.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/data/repositories/portfolio_repository_impl.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/domain/repositories/portfolio_repository.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/add_holding_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/get_portfolio_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/remove_holding_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/watch_portfolio_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/add_holding_cubit.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/portfolio_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/data/datasources/watchlist_local_datasource.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/data/repositories/watchlist_repository_impl.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/repositories/watchlist_repository.dart';
@@ -119,6 +128,45 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<GetCompareChartUseCase>(
     () => GetCompareChartUseCase(sl()),
+  );
+  // ===== Portfolio feature =====
+  sl.registerLazySingleton<PortfolioLocalDataSource>(
+    () => PortfolioLocalDataSourceImpl(storageService: sl()),
+  );
+
+  sl.registerLazySingleton<PortfolioRepository>(
+    () => PortfolioRepositoryImpl(localDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<AddHoldingUseCase>(() => AddHoldingUseCase(sl()));
+
+  sl.registerLazySingleton<RemoveHoldingUseCase>(
+    () => RemoveHoldingUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<GetPortfolioCoinsUseCase>(
+    () => GetPortfolioCoinsUseCase(
+      portfolioRepository: sl(),
+      coinRepository: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<WatchPortfolioCoinsUseCase>(
+    () => WatchPortfolioCoinsUseCase(
+      portfolioRepository: sl(),
+      coinRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<PortfolioCubit>(
+    () => PortfolioCubit(
+      watchPortfolioCoins: sl(),
+      addHoldingUseCase: sl(),
+      removeHoldingUseCase: sl(),
+    ),
+  );
+  sl.registerFactory<AddHoldingCubit>(
+    () => AddHoldingCubit(addHoldingUseCase: sl()),
   );
 
   // ===== Cubits (Factory) =====

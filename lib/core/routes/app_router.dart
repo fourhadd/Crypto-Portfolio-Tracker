@@ -1,5 +1,6 @@
 // core/routes/app_router.dart
 import 'package:crypto_portfolio_tracker/core/shared/widgets/main_wrapper.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/presentation/widgets/portfolio_page.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/presentation/pages/watchlist_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +14,9 @@ import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/coin_detail/presentation/pages/coin_detail_page.dart';
 import '../../features/compare/presentation/cubit/compare_cubit.dart';
 import '../../features/compare/presentation/pages/compare_page.dart';
+import '../../features/portfolio/presentation/cubit/portfolio_cubit.dart';
+import '../../features/portfolio/presentation/cubit/add_holding_cubit.dart';
+import '../../features/portfolio/presentation/pages/add_holding_page.dart';
 import '../constants/app_constants.dart';
 import '../di/injection_container.dart';
 import '../local_storage/storage_service.dart';
@@ -71,6 +75,23 @@ class AppRouter {
           );
         },
       ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/portfolio/add',
+        builder: (context, state) {
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider<AddHoldingCubit>(
+                create: (context) => sl<AddHoldingCubit>(),
+              ),
+              BlocProvider<MarketCubit>(
+                create: (context) => sl<MarketCubit>()..fetchMarkets(),
+              ),
+            ],
+            child: const AddHoldingPage(),
+          );
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainWrapper(navigationShell: navigationShell);
@@ -110,8 +131,9 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/portfolio',
-                builder: (context, state) => const Scaffold(
-                  body: Center(child: Text('Portfolio Page (Teorik)')),
+                builder: (context, state) => BlocProvider<PortfolioCubit>(
+                  create: (context) => sl<PortfolioCubit>()..startWatching(),
+                  child: const PortfolioPage(),
                 ),
               ),
             ],

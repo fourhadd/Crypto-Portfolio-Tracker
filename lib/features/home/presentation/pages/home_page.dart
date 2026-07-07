@@ -51,7 +51,7 @@ class HomePage extends StatelessWidget {
                     onWithdraw: () {},
                   ),
                   SizedBox(height: 28.h),
-                  HomeListHeader(onSeeAllTap: () {}),
+                  HomeListHeader(onSeeAllTap: () => context.go('/market')),
                   SizedBox(height: 8.h),
                   CoinListView(onCoinTap: (id) => context.push('/coin/$id')),
                 ],
