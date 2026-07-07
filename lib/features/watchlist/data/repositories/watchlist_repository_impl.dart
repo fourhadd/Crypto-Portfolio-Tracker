@@ -50,4 +50,23 @@ class WatchlistRepositoryImpl implements WatchlistRepository {
       return const Left(CacheFailure());
     }
   }
+
+  @override
+  Stream<Either<Failure, List<WatchlistItemEntity>>> watchWatchlist() {
+    return localDataSource
+        .watchWatchlist()
+        .map<Either<Failure, List<WatchlistItemEntity>>>(
+          (items) => Right(items),
+        );
+  }
+
+  @override
+  Future<Either<Failure, bool>> isCoinWatchlisted(String coinId) async {
+    try {
+      final items = localDataSource.getWatchlist();
+      return Right(items.any((item) => item.coinId == coinId));
+    } catch (e) {
+      return const Left(CacheFailure());
+    }
+  }
 }

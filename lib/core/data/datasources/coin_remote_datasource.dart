@@ -9,6 +9,11 @@ abstract class CoinRemoteDataSource {
     int page = 1,
     int perPage = 100,
   });
+
+  Future<List<CoinModel>> getCoinsByIds({
+    required List<String> ids,
+    required String vsCurrency,
+  });
 }
 
 class CoinRemoteDataSourceImpl implements CoinRemoteDataSource {
@@ -29,6 +34,28 @@ class CoinRemoteDataSourceImpl implements CoinRemoteDataSource {
         'order': 'market_cap_desc',
         'per_page': perPage,
         'page': page,
+        'sparkline': true,
+        'price_change_percentage': '24h',
+      },
+    );
+
+    final List<dynamic> data = response.data;
+    return data.map((json) => CoinModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<CoinModel>> getCoinsByIds({
+    required List<String> ids,
+    required String vsCurrency,
+  }) async {
+    if (ids.isEmpty) return [];
+
+    final response = await dioClient.get(
+      ApiConstants.coinsMarkets,
+      queryParameters: {
+        'vs_currency': vsCurrency,
+        'ids': ids.join(','),
+        'order': 'market_cap_desc',
         'sparkline': true,
         'price_change_percentage': '24h',
       },

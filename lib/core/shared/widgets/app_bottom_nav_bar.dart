@@ -1,4 +1,5 @@
 // core/shared/widgets/app_bottom_nav_bar.dart
+// core/shared/widgets/app_bottom_nav_bar.dart — tam fayl
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = AppNavTab.values.indexOf(currentTab);
     final radius = 32.r;
 
     return ClipRRect(
@@ -35,54 +35,17 @@ class AppBottomNavBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(color: AppColors.glassBorder),
           ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              _SelectedGlow(
-                tabCount: AppNavTab.values.length,
-                selectedIndex: selectedIndex,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: AppNavTab.values
-                    .map(
-                      (tab) => _NavItem(
-                        tab: tab,
-                        isSelected: tab == currentTab,
-                        onTap: () => onTabSelected(tab),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectedGlow extends StatelessWidget {
-  final int tabCount;
-  final int selectedIndex;
-
-  const _SelectedGlow({required this.tabCount, required this.selectedIndex});
-
-  @override
-  Widget build(BuildContext context) {
-    final dx = -1.0 + (selectedIndex * 2 / (tabCount - 1));
-
-    return AnimatedAlign(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-      alignment: Alignment(dx, 0),
-      child: Container(
-        width: 52.w,
-        height: 52.w,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [AppColors.accentAmberGlow, Colors.transparent],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: AppNavTab.values
+                .map(
+                  (tab) => _NavItem(
+                    tab: tab,
+                    isSelected: tab == currentTab,
+                    onTap: () => onTabSelected(tab),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ),
@@ -108,16 +71,31 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(_iconFor(tab), size: 19.sp, color: color),
-          SizedBox(height: 3.h),
-          Text(
-            _labelFor(tab),
-            style: AppTextStyles.navLabel.copyWith(color: color),
-          ),
-        ],
+      child: SizedBox(
+        width: 60.w,
+        height: 56.h,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              opacity: isSelected ? 1 : 0,
+              child: _Glow(),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(_iconFor(tab), size: 19.sp, color: color),
+                SizedBox(height: 3.h),
+                Text(
+                  _labelFor(tab),
+                  style: AppTextStyles.navLabel.copyWith(color: color),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -146,5 +124,35 @@ class _NavItem extends StatelessWidget {
       case AppNavTab.portfolio:
         return 'Portfolio';
     }
+  }
+}
+
+class _Glow extends StatelessWidget {
+  const _Glow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44.w,
+      height: 44.w,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            AppColors.accentAmber.withValues(alpha: 0.45),
+            AppColors.accentAmber.withValues(alpha: 0.15),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentAmber.withValues(alpha: 0.4),
+            blurRadius: 20.r,
+            spreadRadius: 1.r,
+          ),
+        ],
+      ),
+    );
   }
 }

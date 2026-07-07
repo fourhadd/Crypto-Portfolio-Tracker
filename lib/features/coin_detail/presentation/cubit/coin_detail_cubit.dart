@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/get_coin_detail_usecase.dart';
 import '../../domain/usecases/get_coin_chart_usecase.dart';
-import '../../../watchlist/domain/usecases/get_watchlist_usecase.dart';
+import '../../../watchlist/domain/usecases/is_coin_watchlisted_usecase.dart';
 import '../../../watchlist/domain/usecases/add_to_watchlist_usecase.dart';
 import '../../../watchlist/domain/usecases/remove_from_watchlist_usecase.dart';
 import 'coin_detail_state.dart';
@@ -12,14 +12,14 @@ import 'coin_detail_state.dart';
 class CoinDetailCubit extends Cubit<CoinDetailState> {
   final GetCoinDetailUseCase getCoinDetail;
   final GetCoinChartUseCase getCoinChart;
-  final GetWatchlistUseCase getWatchlist;
+  final IsCoinWatchlistedUseCase isCoinWatchlisted;
   final AddToWatchlistUseCase addToWatchlist;
   final RemoveFromWatchlistUseCase removeFromWatchlist;
 
   CoinDetailCubit({
     required this.getCoinDetail,
     required this.getCoinChart,
-    required this.getWatchlist,
+    required this.isCoinWatchlisted,
     required this.addToWatchlist,
     required this.removeFromWatchlist,
   }) : super(const CoinDetailLoading());
@@ -41,12 +41,12 @@ class CoinDetailCubit extends Cubit<CoinDetailState> {
         );
         if (isClosed) return;
 
-        final watchlistResult = await getWatchlist();
+        final watchlistedResult = await isCoinWatchlisted(coinId);
         if (isClosed) return;
 
-        final isInWatchlist = watchlistResult.fold(
+        final isInWatchlist = watchlistedResult.fold(
           (failure) => false,
-          (items) => items.any((item) => item.coinId == coinId),
+          (value) => value,
         );
 
         chartResult.fold(

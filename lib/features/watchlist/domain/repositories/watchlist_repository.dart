@@ -10,4 +10,8 @@ abstract class WatchlistRepository {
   Future<Either<Failure, Unit>> addToWatchlist(String coinId);
 
   Future<Either<Failure, Unit>> removeFromWatchlist(String coinId);
+
+  Stream<Either<Failure, List<WatchlistItemEntity>>> watchWatchlist();
+
+  Future<Either<Failure, bool>> isCoinWatchlisted(String coinId);
 }

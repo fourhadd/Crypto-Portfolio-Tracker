@@ -9,4 +9,9 @@ abstract class CoinRepository {
     int page = 1,
     int perPage = 100,
   });
+
+  Future<Either<Failure, List<CoinEntity>>> getCoinsByIds({
+    required List<String> ids,
+    required String vsCurrency,
+  });
 }

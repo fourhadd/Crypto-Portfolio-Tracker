@@ -1,4 +1,11 @@
 // core/di/injection_container.dart
+import 'package:crypto_portfolio_tracker/features/watchlist/data/datasources/watchlist_local_datasource.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/data/repositories/watchlist_repository_impl.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/repositories/watchlist_repository.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/get_watchlist_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/is_coin_watchlisted_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/watch_watchlist_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/presentation/cubit/watchlist_cubit.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:crypto_portfolio_tracker/core/local_storage/storage_service.dart';
@@ -16,9 +23,6 @@ import 'package:crypto_portfolio_tracker/features/coin_detail/domain/repositorie
 import 'package:crypto_portfolio_tracker/features/coin_detail/domain/usecases/get_coin_detail_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/coin_detail/domain/usecases/get_coin_chart_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/coin_detail/presentation/cubit/coin_detail_cubit.dart';
-import 'package:crypto_portfolio_tracker/features/watchlist/data/datasources/watchlist_local_datasource.dart';
-import 'package:crypto_portfolio_tracker/features/watchlist/data/repositories/watchlist_repository_impl.dart';
-import 'package:crypto_portfolio_tracker/features/watchlist/domain/repositories/watchlist_repository.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/get_watchlist_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/add_to_watchlist_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/remove_from_watchlist_usecase.dart';
@@ -83,6 +87,28 @@ Future<void> initDependencies() async {
     () => RemoveFromWatchlistUseCase(sl()),
   );
 
+  sl.registerLazySingleton<IsCoinWatchlistedUseCase>(
+    () => IsCoinWatchlistedUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<GetWatchlistCoinsUseCase>(
+    () => GetWatchlistCoinsUseCase(
+      watchlistRepository: sl(),
+      coinRepository: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<WatchWatchlistCoinsUseCase>(
+    () => WatchWatchlistCoinsUseCase(
+      watchlistRepository: sl(),
+      coinRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<WatchlistCubit>(
+    () => WatchlistCubit(watchWatchlistCoins: sl(), removeFromWatchlist: sl()),
+  );
+
   // ===== Compare feature =====
   sl.registerLazySingleton<CompareRemoteDataSource>(
     () => CompareRemoteDataSourceImpl(dioClient: sl()),
@@ -109,7 +135,7 @@ Future<void> initDependencies() async {
     () => CoinDetailCubit(
       getCoinDetail: sl(),
       getCoinChart: sl(),
-      getWatchlist: sl(),
+      isCoinWatchlisted: sl(), // was: getWatchlist: sl(),
       addToWatchlist: sl(),
       removeFromWatchlist: sl(),
     ),

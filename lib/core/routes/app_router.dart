@@ -1,5 +1,6 @@
 // core/routes/app_router.dart
 import 'package:crypto_portfolio_tracker/core/shared/widgets/main_wrapper.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/presentation/pages/watchlist_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -101,9 +102,7 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/watchlist',
-                builder: (context, state) => const Scaffold(
-                  body: Center(child: Text('Watchlist Page (Teorik)')),
-                ),
+                builder: (context, state) => const WatchlistPage(),
               ),
             ],
           ),

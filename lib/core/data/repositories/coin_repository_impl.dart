@@ -1,6 +1,6 @@
 // core/data/repositories/coin_repository_impl.dart
 import 'package:dartz/dartz.dart';
-import '../../errors/exceptions.dart';
+
 import '../../errors/failures.dart';
 import '../../domain/entities/coin_entity.dart';
 import '../../domain/repositories/coin_repository.dart';
@@ -18,21 +18,32 @@ class CoinRepositoryImpl implements CoinRepository {
     int perPage = 100,
   }) async {
     try {
-      final remoteCoins = await remoteDataSource.getTopCoins(
+      final coins = await remoteDataSource.getTopCoins(
         vsCurrency: vsCurrency,
         page: page,
         perPage: perPage,
       );
-      return Right(remoteCoins);
+      return Right(coins);
     } catch (e) {
-      if (e is ServerException) {
-        return Left(ServerFailure(e.message));
-      } else if (e is NetworkException) {
-        return const Left(NetworkFailure());
-      } else if (e is TimeoutException) {
-        return const Left(TimeoutFailure());
-      }
-      return const Left(UnknownFailure());
+      return const Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CoinEntity>>> getCoinsByIds({
+    required List<String> ids,
+    required String vsCurrency,
+  }) async {
+    if (ids.isEmpty) return const Right(<CoinEntity>[]);
+
+    try {
+      final coins = await remoteDataSource.getCoinsByIds(
+        ids: ids,
+        vsCurrency: vsCurrency,
+      );
+      return Right(coins);
+    } catch (e) {
+      return const Left(ServerFailure());
     }
   }
 }
