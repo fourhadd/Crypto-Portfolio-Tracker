@@ -31,8 +31,6 @@ class HomePage extends StatelessWidget {
               size: 180.w,
             ),
           ),
-
-          // Əsas məzmun
           SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 100.h),
@@ -41,7 +39,7 @@ class HomePage extends StatelessWidget {
                 children: [
                   HomeAppBar(
                     userName: 'Crypto Trader',
-                    onStatsTap: () {},
+                    onStatsTap: () => context.push('/compare'),
                     onSettingsTap: () {},
                   ),
                   SizedBox(height: 24.h),

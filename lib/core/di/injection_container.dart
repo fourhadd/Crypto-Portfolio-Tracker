@@ -22,11 +22,15 @@ import 'package:crypto_portfolio_tracker/features/watchlist/domain/repositories/
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/get_watchlist_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/add_to_watchlist_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/remove_from_watchlist_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/compare/data/datasources/compare_remote_datasource.dart';
+import 'package:crypto_portfolio_tracker/features/compare/data/repositories/compare_repository_impl.dart';
+import 'package:crypto_portfolio_tracker/features/compare/domain/repositories/compare_repository.dart';
+import 'package:crypto_portfolio_tracker/features/compare/domain/usecases/get_compare_chart_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/compare/presentation/cubit/compare_cubit.dart';
 
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
-  // Core / Network
   sl.registerLazySingleton<DioClient>(() => DioClient());
   sl.registerLazySingleton<StorageService>(() => StorageService());
 
@@ -79,6 +83,20 @@ Future<void> initDependencies() async {
     () => RemoveFromWatchlistUseCase(sl()),
   );
 
+  // ===== Compare feature =====
+  sl.registerLazySingleton<CompareRemoteDataSource>(
+    () => CompareRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<CompareRepository>(
+    () => CompareRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<GetCompareChartUseCase>(
+    () => GetCompareChartUseCase(sl()),
+  );
+
+  // ===== Cubits (Factory) =====
   sl.registerFactory<OnboardingCubit>(
     () => OnboardingCubit(storageService: sl()),
   );
@@ -96,4 +114,6 @@ Future<void> initDependencies() async {
       removeFromWatchlist: sl(),
     ),
   );
+
+  sl.registerFactory<CompareCubit>(() => CompareCubit(getCompareChart: sl()));
 }

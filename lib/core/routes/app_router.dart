@@ -10,6 +10,8 @@ import '../../features/market/presentation/pages/market_page.dart';
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/coin_detail/presentation/pages/coin_detail_page.dart';
+import '../../features/compare/presentation/cubit/compare_cubit.dart';
+import '../../features/compare/presentation/pages/compare_page.dart';
 import '../constants/app_constants.dart';
 import '../di/injection_container.dart';
 import '../local_storage/storage_service.dart';
@@ -37,6 +39,35 @@ class AppRouter {
         builder: (context, state) {
           final coinId = state.pathParameters['coinId']!;
           return CoinDetailPage(coinId: coinId);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/compare',
+        builder: (context, state) {
+          final firstCoinId = state.uri.queryParameters['first'];
+          final secondCoinId = state.uri.queryParameters['second'];
+
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider<CompareCubit>(
+                create: (context) {
+                  final cubit = sl<CompareCubit>();
+                  if (firstCoinId != null) {
+                    cubit.presetFirstCoinId(firstCoinId);
+                  }
+                  if (secondCoinId != null) {
+                    cubit.presetSecondCoinId(secondCoinId);
+                  }
+                  return cubit;
+                },
+              ),
+              BlocProvider<MarketCubit>(
+                create: (context) => sl<MarketCubit>()..fetchMarkets(),
+              ),
+            ],
+            child: const ComparePage(),
+          );
         },
       ),
       StatefulShellRoute.indexedStack(
