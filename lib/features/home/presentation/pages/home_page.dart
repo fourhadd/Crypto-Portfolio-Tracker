@@ -1,10 +1,13 @@
 // features/home/presentation/pages/home_page.dart
 import 'package:crypto_portfolio_tracker/features/home/presentation/widgets/home_list_header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../portfolio/presentation/cubit/portfolio_cubit.dart';
+import '../../../portfolio/presentation/cubit/portfolio_state.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/coin_list_view.dart';
 import '../widgets/home_app_bar.dart';
@@ -43,12 +46,34 @@ class HomePage extends StatelessWidget {
                     onSettingsTap: () {},
                   ),
                   SizedBox(height: 24.h),
-                  BalanceCard(
-                    totalBalance: 47833.65,
-                    todayChangeAmount: 1119.28,
-                    todayChangePercent: 2.34,
-                    onDeposit: () {},
-                    onWithdraw: () {},
+                  BlocBuilder<PortfolioCubit, PortfolioState>(
+                    builder: (context, state) {
+                      double totalBalance = 0;
+                      double todayChangeAmount = 0;
+
+                      if (state is PortfolioLoaded) {
+                        for (final item in state.items) {
+                          totalBalance += item.currentValue;
+                          final changeAmount =
+                              item.currentValue *
+                              (item.coin.priceChangePercentage24h / 100);
+                          todayChangeAmount += changeAmount;
+                        }
+                      }
+
+                      final yesterdayValue = totalBalance - todayChangeAmount;
+                      final todayChangePercent = yesterdayValue == 0
+                          ? 0.0
+                          : (todayChangeAmount / yesterdayValue) * 100;
+
+                      return BalanceCard(
+                        totalBalance: totalBalance,
+                        todayChangeAmount: todayChangeAmount,
+                        todayChangePercent: todayChangePercent,
+                        onDeposit: () {},
+                        onWithdraw: () {},
+                      );
+                    },
                   ),
                   SizedBox(height: 28.h),
                   HomeListHeader(onSeeAllTap: () => context.go('/market')),

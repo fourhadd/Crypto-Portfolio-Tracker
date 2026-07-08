@@ -12,19 +12,14 @@ class PortfolioAppBar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Portfolio',
-          style: AppTextStyles.headingLarge.copyWith(fontSize: 26.sp),
-        ),
+        Text('Portfolio', style: AppTextStyles.displayLarge),
         Row(
           children: [
             _CircleIconButton(
               icon: Icons.pie_chart_outline_rounded,
               background: AppColors.bgElevated,
               iconColor: AppColors.textPrimary,
-              onTap: () {
-                // TODO: allocation breakdown ekranı/bottom sheet (bu tapşırıqda yoxdur)
-              },
+              onTap: () => context.push('/portfolio/composition'),
             ),
             SizedBox(width: 10.w),
             _CircleIconButton(

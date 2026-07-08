@@ -1,10 +1,12 @@
 // core/di/injection_container.dart
+import 'package:crypto_portfolio_tracker/features/composition/presentation/cubit/composition_mode_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/data/datasources/portfolio_local_datasource.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/data/repositories/portfolio_repository_impl.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/repositories/portfolio_repository.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/add_holding_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/get_portfolio_coins_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/remove_holding_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/sell_holding_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/watch_portfolio_coins_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/add_holding_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/portfolio_cubit.dart';
@@ -158,7 +160,7 @@ Future<void> initDependencies() async {
     ),
   );
 
-  sl.registerFactory<PortfolioCubit>(
+  sl.registerLazySingleton<PortfolioCubit>(
     () => PortfolioCubit(
       watchPortfolioCoins: sl(),
       addHoldingUseCase: sl(),
@@ -168,6 +170,9 @@ Future<void> initDependencies() async {
   sl.registerFactory<AddHoldingCubit>(
     () => AddHoldingCubit(addHoldingUseCase: sl()),
   );
+  sl.registerLazySingleton<SellHoldingUseCase>(() => SellHoldingUseCase(sl()));
+  // ===== Composition feature =====
+  sl.registerFactory<CompositionModeCubit>(() => CompositionModeCubit());
 
   // ===== Cubits (Factory) =====
   sl.registerFactory<OnboardingCubit>(

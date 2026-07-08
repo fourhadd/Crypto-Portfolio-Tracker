@@ -9,4 +9,6 @@ abstract class PortfolioRepository {
   Future<void> addHolding(HoldingEntity holding);
 
   Future<void> removeHolding(String holdingId);
+
+  Future<void> reduceHolding(String holdingId, double sellAmount);
 }

@@ -12,6 +12,8 @@ import '../widgets/coin_select_field.dart';
 import '../widgets/labeled_text_field.dart';
 import '../widgets/purchase_date_field.dart';
 import '../widgets/save_holding_button.dart';
+import '../widgets/use_current_price_hint.dart';
+import '../widgets/total_cost_card.dart';
 
 class AddHoldingPage extends StatelessWidget {
   const AddHoldingPage({super.key});
@@ -53,15 +55,23 @@ class AddHoldingPage extends StatelessWidget {
                 SizedBox(height: 20.h),
                 Text('BUY PRICE (USD)', style: AppTextStyles.microLabel),
                 SizedBox(height: 8.h),
-                LabeledTextField(
-                  hint: '0.00',
-                  onChanged: (v) =>
-                      context.read<AddHoldingCubit>().updateBuyPrice(v),
+                BlocBuilder<AddHoldingCubit, AddHoldingState>(
+                  buildWhen: (prev, curr) => prev.buyPrice != curr.buyPrice,
+                  builder: (context, state) {
+                    return LabeledTextField(
+                      hint: '0.00',
+                      text: state.buyPrice?.toStringAsFixed(2),
+                      onChanged: (v) =>
+                          context.read<AddHoldingCubit>().updateBuyPrice(v),
+                    );
+                  },
                 ),
+                const UseCurrentPriceHint(),
                 SizedBox(height: 20.h),
                 Text('PURCHASE DATE', style: AppTextStyles.microLabel),
                 SizedBox(height: 8.h),
                 const PurchaseDateField(),
+                const TotalCostCard(),
                 SizedBox(height: 28.h),
                 const SaveHoldingButton(),
                 SizedBox(height: 20.h),

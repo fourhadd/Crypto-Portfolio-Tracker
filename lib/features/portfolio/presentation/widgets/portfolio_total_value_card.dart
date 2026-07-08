@@ -34,7 +34,7 @@ class PortfolioTotalValueCard extends StatelessWidget {
             builder: (context, state) {
               final value = state is PortfolioLoaded ? state.totalValue : 0.0;
               return Text(
-                '\$${NumberFormat('#,##0.000000', 'en_US').format(value)}',
+                '\$${NumberFormat('#,##0.00', 'en_US').format(value)}',
                 style: AppTextStyles.balanceLarge,
               );
             },

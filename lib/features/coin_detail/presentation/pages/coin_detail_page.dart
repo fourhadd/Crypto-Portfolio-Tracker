@@ -1,5 +1,6 @@
 // features/coin_detail/presentation/pages/coin_detail_page.dart
 import 'package:crypto_portfolio_tracker/core/di/injection_container.dart';
+import 'package:crypto_portfolio_tracker/features/coin_detail/domain/entities/coin_detail_entity_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -62,7 +63,7 @@ class _CoinDetailView extends StatelessWidget {
                     SizedBox(height: 24.h),
                     const CoinDetailStatsGrid(),
                     SizedBox(height: 24.h),
-                    const CoinDetailActionButtons(),
+                    CoinDetailActionButtons(coin: state.coin.toCoinEntity()),
                     SizedBox(height: 24.h),
                   ],
                 ),

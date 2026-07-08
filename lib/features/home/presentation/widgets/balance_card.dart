@@ -1,4 +1,4 @@
-// features/market/presentation/widgets/balance_card.dart
+// features/home/presentation/widgets/balance_card.dart
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -74,13 +74,15 @@ class BalanceCard extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      Icons.trending_up_rounded,
+                      todayChangePercent >= 0
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
                       color: changeColor,
                       size: 16.sp,
                     ),
                     SizedBox(width: 4.w),
                     Text(
-                      '+${NumberFormatter.formatCurrency(todayChangeAmount)} '
+                      '${todayChangeAmount >= 0 ? '+' : ''}${NumberFormatter.formatCurrency(todayChangeAmount)} '
                       '(${NumberFormatter.formatPercent(todayChangePercent)}) today',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: changeColor,

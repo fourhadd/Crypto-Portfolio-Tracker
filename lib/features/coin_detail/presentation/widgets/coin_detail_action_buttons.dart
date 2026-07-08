@@ -1,12 +1,16 @@
 // features/coin_detail/presentation/widgets/coin_detail_action_buttons.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/domain/entities/coin_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class CoinDetailActionButtons extends StatelessWidget {
-  const CoinDetailActionButtons({super.key});
+  final CoinEntity coin;
+
+  const CoinDetailActionButtons({super.key, required this.coin});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,9 @@ class CoinDetailActionButtons extends StatelessWidget {
             backgroundColor: AppColors.accentAmber,
             textColor: AppColors.bgBase,
             glow: true,
-            onTap: () {},
+            // Coin obyektini extra kimi ötürürük ki, AddHoldingCubit
+            // route açılan kimi bu coin-i preset edə bilsin.
+            onTap: () => context.push('/portfolio/add', extra: coin),
           ),
         ),
         SizedBox(width: 12.w),
@@ -28,7 +34,7 @@ class CoinDetailActionButtons extends StatelessWidget {
             backgroundColor: AppColors.negativeBg,
             textColor: AppColors.negative,
             borderColor: AppColors.negative,
-            onTap: () {},
+            onTap: () => context.push('/portfolio/sell/${coin.id}'),
           ),
         ),
       ],

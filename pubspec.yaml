@@ -42,7 +42,7 @@ dependencies:
   get_storage: ^2.1.1
   fl_chart: ^1.2.0
   intl: ^0.20.3
-  flutter_local_notifications: ^22.0.1
+
   csv: ^8.0.0
   path_provider: ^2.1.6
   share_plus: ^13.2.0

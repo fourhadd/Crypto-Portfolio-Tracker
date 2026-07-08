@@ -19,10 +19,7 @@ class WatchlistHeader extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Watchlist',
-              style: AppTextStyles.headingLarge.copyWith(fontSize: 28.sp),
-            ),
+            Text('Watchlist', style: AppTextStyles.displayLarge),
             SizedBox(height: 4.h),
             BlocBuilder<WatchlistCubit, WatchlistState>(
               buildWhen: (previous, current) => current is WatchlistLoaded,

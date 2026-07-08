@@ -4,7 +4,8 @@ class ApiConstants {
 
   static const String baseUrl = 'https://api.coingecko.com/api/v3';
 
-  static const String demoApiKey = 'your demo_api_key_here';
+  static const String demoApiKey =
+      'your_demo_api_key_here'; // Replace with your actual demo API key if needed
 
   static const String coinsMarkets = '/coins/markets';
 

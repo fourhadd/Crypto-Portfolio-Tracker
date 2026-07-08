@@ -27,12 +27,17 @@ class PortfolioCubit extends Cubit<PortfolioState> {
     _subscription?.cancel();
     _subscription = watchPortfolioCoins(vsCurrency: vsCurrency).listen(
       (result) {
-        result.fold(
-          (failure) => emit(PortfolioError(failure.message)),
-          (items) => emit(PortfolioLoaded(items)),
-        );
+        result.fold((failure) {
+          // ignore: avoid_print
+          print('PORTFOLIO FAILURE: ${failure.message}');
+          emit(PortfolioError(failure.message));
+        }, (items) => emit(PortfolioLoaded(items)));
       },
-      onError: (_) {
+      onError: (e, st) {
+        // ignore: avoid_print
+        print('PORTFOLIO STREAM ERROR: $e');
+        // ignore: avoid_print
+        print('STACK TRACE: $st');
         emit(const PortfolioError('Naməlum xəta baş verdi'));
       },
     );

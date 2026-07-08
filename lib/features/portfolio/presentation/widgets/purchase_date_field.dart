@@ -7,6 +7,7 @@ import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
 
 import '../cubit/add_holding_cubit.dart';
 import '../cubit/add_holding_state.dart';
+import 'calendar/calendar_sheet.dart';
 
 class PurchaseDateField extends StatelessWidget {
   const PurchaseDateField({super.key});
@@ -19,11 +20,11 @@ class PurchaseDateField extends StatelessWidget {
         return InkWell(
           borderRadius: BorderRadius.circular(AppRadius.chip),
           onTap: () async {
-            final picked = await showDatePicker(
+            final picked = await showModalBottomSheet<DateTime>(
               context: context,
-              initialDate: state.buyDate,
-              firstDate: DateTime(2009),
-              lastDate: DateTime.now(),
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (context) => CalendarSheet(initialDate: state.buyDate),
             );
             if (picked != null && context.mounted) {
               context.read<AddHoldingCubit>().updateBuyDate(picked);

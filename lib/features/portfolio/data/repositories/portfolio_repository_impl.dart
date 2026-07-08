@@ -23,4 +23,30 @@ class PortfolioRepositoryImpl implements PortfolioRepository {
   @override
   Future<void> removeHolding(String holdingId) =>
       localDataSource.removeHolding(holdingId);
+
+  @override
+  Future<void> reduceHolding(String holdingId, double sellAmount) async {
+    final holdings = await localDataSource.getHoldings();
+    final index = holdings.indexWhere((h) => h.id == holdingId);
+    if (index == -1) return;
+
+    final current = holdings[index];
+    final remaining = current.amount - sellAmount;
+
+    await localDataSource.removeHolding(holdingId);
+
+    if (remaining > 0.00000001) {
+      await localDataSource.addHolding(
+        HoldingModel.fromEntity(
+          HoldingEntity(
+            id: current.id,
+            coinId: current.coinId,
+            amount: remaining,
+            buyPrice: current.buyPrice,
+            buyDate: current.buyDate,
+          ),
+        ),
+      );
+    }
+  }
 }

@@ -16,7 +16,7 @@ class AddHoldingCubit extends Cubit<AddHoldingState> {
       AddHoldingState(
         coin: coin,
         quantity: state.quantity,
-        buyPrice: state.buyPrice,
+        buyPrice: coin.currentPrice,
         buyDate: state.buyDate,
       ),
     );
