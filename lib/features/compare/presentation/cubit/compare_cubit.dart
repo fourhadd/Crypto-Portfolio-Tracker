@@ -105,6 +105,8 @@ class CompareCubit extends Cubit<CompareState> {
       days: state.timeframe.apiValue,
     );
 
+    if (isClosed) return;
+
     result.fold(
       (failure) => emit(
         state.copyWith(

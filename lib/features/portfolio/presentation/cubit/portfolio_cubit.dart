@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/sevices/storage_service.dart';
 import '../../domain/usecases/add_holding_usecase.dart';
 import '../../domain/usecases/remove_holding_usecase.dart';
 import '../../domain/usecases/watch_portfolio_coins_usecase.dart';
@@ -12,27 +15,43 @@ class PortfolioCubit extends Cubit<PortfolioState> {
   final WatchPortfolioCoinsUseCase watchPortfolioCoins;
   final AddHoldingUseCase addHoldingUseCase;
   final RemoveHoldingUseCase removeHoldingUseCase;
+  final StorageService storageService;
 
   StreamSubscription? _subscription;
+  late final StreamSubscription<String> _currencySubscription;
 
   PortfolioCubit({
     required this.watchPortfolioCoins,
     required this.addHoldingUseCase,
     required this.removeHoldingUseCase,
-  }) : super(const PortfolioState());
+    required this.storageService,
+    required CurrencyNotifierService currencyNotifier,
+  }) : super(const PortfolioState()) {
+    _currencySubscription = currencyNotifier.stream.listen((currency) {
+      startWatching(vsCurrency: currency);
+    });
+  }
 
-  void startWatching({String vsCurrency = 'usd'}) {
+  void startWatching({String? vsCurrency}) {
+    final currency =
+        vsCurrency ??
+        storageService.readValue<String>(AppConstants.storageKeyCurrency) ??
+        'usd';
+
     emit(state.copyWith(status: PortfolioStatus.loading));
 
     _subscription?.cancel();
-    _subscription = watchPortfolioCoins(vsCurrency: vsCurrency).listen(
+
+    _subscription = watchPortfolioCoins(vsCurrency: currency).listen(
       (result) {
         if (isClosed) return;
+
         result.fold(
           (failure) {
             if (kDebugMode) {
               debugPrint('PORTFOLIO FAILURE: ${failure.message}');
             }
+
             emit(
               state.copyWith(
                 status: PortfolioStatus.error,
@@ -40,17 +59,19 @@ class PortfolioCubit extends Cubit<PortfolioState> {
               ),
             );
           },
-          (items) => emit(
-            state.copyWith(status: PortfolioStatus.loaded, items: items),
-          ),
+          (items) {
+            emit(state.copyWith(status: PortfolioStatus.loaded, items: items));
+          },
         );
       },
       onError: (e, st) {
         if (isClosed) return;
+
         if (kDebugMode) {
           debugPrint('PORTFOLIO STREAM ERROR: $e');
           debugPrint('STACK TRACE: $st');
         }
+
         emit(
           state.copyWith(
             status: PortfolioStatus.error,
@@ -80,6 +101,7 @@ class PortfolioCubit extends Cubit<PortfolioState> {
       final optimistic = state.items
           .where((item) => item.holding.id != holdingId)
           .toList();
+
       emit(state.copyWith(items: optimistic));
     }
 
@@ -87,8 +109,9 @@ class PortfolioCubit extends Cubit<PortfolioState> {
   }
 
   @override
-  Future<void> close() {
-    _subscription?.cancel();
+  Future<void> close() async {
+    await _subscription?.cancel();
+    await _currencySubscription.cancel();
     return super.close();
   }
 }

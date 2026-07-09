@@ -1,4 +1,5 @@
 // core/di/injection_container.dart
+import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
 import 'package:crypto_portfolio_tracker/features/composition/presentation/cubit/composition_mode_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/data/datasources/portfolio_local_datasource.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/data/repositories/portfolio_repository_impl.dart';
@@ -47,6 +48,9 @@ final sl = GetIt.instance;
 Future<void> initDependencies() async {
   sl.registerLazySingleton<DioClient>(() => DioClient());
   sl.registerLazySingleton<StorageService>(() => StorageService());
+  sl.registerLazySingleton<CurrencyNotifierService>(
+    () => CurrencyNotifierService(),
+  );
 
   // ===== Market feature =====
   sl.registerLazySingleton<CoinRemoteDataSource>(
@@ -116,7 +120,12 @@ Future<void> initDependencies() async {
   );
 
   sl.registerFactory<WatchlistCubit>(
-    () => WatchlistCubit(watchWatchlistCoins: sl(), removeFromWatchlist: sl()),
+    () => WatchlistCubit(
+      watchWatchlistCoins: sl<WatchWatchlistCoinsUseCase>(),
+      removeFromWatchlist: sl<RemoveFromWatchlistUseCase>(),
+      storageService: sl<StorageService>(),
+      currencyNotifier: sl<CurrencyNotifierService>(),
+    ),
   );
 
   // ===== Compare feature =====
@@ -155,9 +164,11 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<PortfolioCubit>(
     () => PortfolioCubit(
-      watchPortfolioCoins: sl(),
-      addHoldingUseCase: sl(),
-      removeHoldingUseCase: sl(),
+      watchPortfolioCoins: sl<WatchPortfolioCoinsUseCase>(),
+      addHoldingUseCase: sl<AddHoldingUseCase>(),
+      removeHoldingUseCase: sl<RemoveHoldingUseCase>(),
+      storageService: sl<StorageService>(),
+      currencyNotifier: sl<CurrencyNotifierService>(),
     ),
   );
   sl.registerFactory<AddHoldingCubit>(
@@ -172,9 +183,20 @@ Future<void> initDependencies() async {
     () => OnboardingCubit(storageService: sl()),
   );
 
-  sl.registerFactory<HomeCubit>(() => HomeCubit(sl()));
-
-  sl.registerLazySingleton<MarketCubit>(() => MarketCubit(sl()));
+  sl.registerFactory<HomeCubit>(
+    () => HomeCubit(
+      sl<GetTopCoinsUseCase>(),
+      sl<StorageService>(),
+      sl<CurrencyNotifierService>(),
+    ),
+  );
+  sl.registerLazySingleton<MarketCubit>(
+    () => MarketCubit(
+      sl<GetTopCoinsUseCase>(),
+      sl<StorageService>(),
+      sl<CurrencyNotifierService>(),
+    ),
+  );
 
   sl.registerFactory<CoinDetailCubit>(
     () => CoinDetailCubit(
@@ -187,5 +209,7 @@ Future<void> initDependencies() async {
   );
 
   sl.registerFactory<CompareCubit>(() => CompareCubit(getCompareChart: sl()));
-  sl.registerFactory(() => SettingsCubit(storageService: sl()));
+  sl.registerFactory(
+    () => SettingsCubit(storageService: sl(), currencyNotifier: sl()),
+  );
 }

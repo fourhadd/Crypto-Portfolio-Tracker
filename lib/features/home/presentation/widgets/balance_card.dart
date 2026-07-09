@@ -66,10 +66,7 @@ class BalanceCard extends StatelessWidget {
               children: [
                 Text('TOTAL BALANCE', style: AppTextStyles.microLabel),
                 SizedBox(height: 8.h),
-                Text(
-                  NumberFormatter.formatCurrency(totalBalance),
-                  style: AppTextStyles.balanceLarge,
-                ),
+                _BalanceAmount(totalBalance: totalBalance),
                 SizedBox(height: 6.h),
                 Row(
                   children: [
@@ -114,6 +111,43 @@ class BalanceCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BalanceAmount extends StatelessWidget {
+  final double totalBalance;
+
+  const _BalanceAmount({required this.totalBalance});
+
+  @override
+  Widget build(BuildContext context) {
+    final formatted = NumberFormatter.formatCurrency(totalBalance);
+    final dotIndex = formatted.lastIndexOf(',');
+
+    if (dotIndex == -1) {
+      return Text(formatted, style: AppTextStyles.balanceLarge);
+    }
+
+    final wholePart = formatted.substring(0, dotIndex);
+    final decimalPart = formatted.substring(dotIndex + 1);
+
+    return RichText(
+      text: TextSpan(
+        style: AppTextStyles.balanceLarge,
+        children: [
+          TextSpan(text: wholePart),
+          WidgetSpan(child: SizedBox(width: 6.w)),
+          TextSpan(
+            text: '.$decimalPart',
+            style: AppTextStyles.balanceLarge.copyWith(
+              fontSize: (AppTextStyles.balanceLarge.fontSize ?? 32.sp) * 0.5,
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

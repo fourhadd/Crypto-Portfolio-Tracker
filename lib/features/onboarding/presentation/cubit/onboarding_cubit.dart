@@ -25,6 +25,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
           ) ??
           false;
 
+      if (isClosed) return;
       emit(
         state.copyWith(
           status: seen
@@ -33,6 +34,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         ),
       );
     } catch (_) {
+      if (isClosed) return;
       emit(state.copyWith(status: OnboardingStatus.inProgress));
     }
   }
@@ -62,7 +64,9 @@ class OnboardingCubit extends Cubit<OnboardingState> {
       );
     } catch (_) {
     } finally {
-      emit(state.copyWith(status: OnboardingStatus.completed));
+      if (!isClosed) {
+        emit(state.copyWith(status: OnboardingStatus.completed));
+      }
     }
   }
 

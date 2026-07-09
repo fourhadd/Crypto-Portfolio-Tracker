@@ -1,29 +1,45 @@
 import 'dart:async';
-
+import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../domain/usecases/watch_watchlist_coins_usecase.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/sevices/storage_service.dart';
 import '../../domain/usecases/remove_from_watchlist_usecase.dart';
+import '../../domain/usecases/watch_watchlist_coins_usecase.dart';
 import 'watchlist_state.dart';
 
 class WatchlistCubit extends Cubit<WatchlistState> {
   final WatchWatchlistCoinsUseCase watchWatchlistCoins;
   final RemoveFromWatchlistUseCase removeFromWatchlist;
+  final StorageService storageService;
 
   StreamSubscription? _subscription;
+  late final StreamSubscription<String> _currencySubscription;
 
   WatchlistCubit({
     required this.watchWatchlistCoins,
     required this.removeFromWatchlist,
-  }) : super(const WatchlistState());
+    required this.storageService,
+    required CurrencyNotifierService currencyNotifier,
+  }) : super(const WatchlistState()) {
+    _currencySubscription = currencyNotifier.stream.listen((currency) {
+      startWatching(vsCurrency: currency);
+    });
+  }
 
-  void startWatching({String vsCurrency = 'usd'}) {
+  void startWatching({String? vsCurrency}) {
+    final currency =
+        vsCurrency ??
+        storageService.readValue<String>(AppConstants.storageKeyCurrency) ??
+        'usd';
+
     emit(state.copyWith(status: WatchlistStatus.loading));
 
     _subscription?.cancel();
-    _subscription = watchWatchlistCoins(vsCurrency: vsCurrency).listen(
+
+    _subscription = watchWatchlistCoins(vsCurrency: currency).listen(
       (result) {
         if (isClosed) return;
+
         result.fold(
           (failure) => emit(
             state.copyWith(
@@ -38,6 +54,7 @@ class WatchlistCubit extends Cubit<WatchlistState> {
       },
       onError: (_) {
         if (isClosed) return;
+
         emit(
           state.copyWith(
             status: WatchlistStatus.error,
@@ -53,6 +70,7 @@ class WatchlistCubit extends Cubit<WatchlistState> {
       final optimistic = state.coins
           .where((item) => item.coin.id != coinId)
           .toList();
+
       emit(state.copyWith(coins: optimistic));
     }
 
@@ -60,8 +78,9 @@ class WatchlistCubit extends Cubit<WatchlistState> {
   }
 
   @override
-  Future<void> close() {
-    _subscription?.cancel();
+  Future<void> close() async {
+    await _subscription?.cancel();
+    await _currencySubscription.cancel();
     return super.close();
   }
 }

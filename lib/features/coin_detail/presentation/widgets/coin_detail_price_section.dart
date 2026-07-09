@@ -15,7 +15,9 @@ class CoinDetailPriceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CoinDetailCubit, CoinDetailState>(
-      buildWhen: (previous, current) => current is CoinDetailLoaded,
+      buildWhen: (previous, current) =>
+          current is CoinDetailLoaded &&
+          (previous is! CoinDetailLoaded || previous.coin != current.coin),
       builder: (context, state) {
         if (state is! CoinDetailLoaded) return const SizedBox.shrink();
         final coin = state.coin;

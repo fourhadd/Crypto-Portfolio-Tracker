@@ -1,14 +1,15 @@
 // features/settings/presentation/cubit/settings_cubit.dart
+import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/sevices/storage_service.dart';
 import 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
   final StorageService storageService;
+  final CurrencyNotifierService currencyNotifier;
 
-  SettingsCubit({required this.storageService})
+  SettingsCubit({required this.storageService, required this.currencyNotifier})
     : super(SettingsState.initial()) {
     _loadSettings();
   }
@@ -17,9 +18,11 @@ class SettingsCubit extends Cubit<SettingsState> {
     final currency =
         storageService.readValue<String>(AppConstants.storageKeyCurrency) ??
         state.currency;
+
     final refreshInterval =
         storageService.readValue<int>(AppConstants.storageKeyRefreshInterval) ??
         state.refreshIntervalSeconds;
+
     final notificationsEnabled =
         storageService.readValue<bool>(
           AppConstants.storageKeyNotificationsEnabled,
@@ -37,11 +40,15 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   void setCurrency(String currency) {
     storageService.writeValue(AppConstants.storageKeyCurrency, currency);
+
     emit(state.copyWith(currency: currency, isCurrencyPickerOpen: false));
+
+    currencyNotifier.notify(currency);
   }
 
   void setRefreshInterval(int seconds) {
     storageService.writeValue(AppConstants.storageKeyRefreshInterval, seconds);
+
     emit(
       state.copyWith(
         refreshIntervalSeconds: seconds,
@@ -55,6 +62,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       AppConstants.storageKeyNotificationsEnabled,
       enabled,
     );
+
     emit(state.copyWith(notificationsEnabled: enabled));
   }
 
@@ -64,6 +72,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   void toggleCurrencyPicker() {
     final willOpen = !state.isCurrencyPickerOpen;
+
     emit(
       state.copyWith(
         isCurrencyPickerOpen: willOpen,
@@ -74,6 +83,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   void toggleRefreshPicker() {
     final willOpen = !state.isRefreshPickerOpen;
+
     emit(
       state.copyWith(
         isRefreshPickerOpen: willOpen,

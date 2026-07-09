@@ -17,7 +17,8 @@ class MarketCoinListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MarketCubit, MarketState>(
-      buildWhen: (previous, current) => previous.status != current.status,
+      buildWhen: (previous, current) =>
+          previous.status != current.status || previous.coins != current.coins,
       builder: (context, state) {
         if (state.status == MarketStatus.loading) {
           return const CoreCoinListSkeleton(itemCount: 8);
