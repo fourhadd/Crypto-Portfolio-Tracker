@@ -1,12 +1,13 @@
 // features/watchlist/presentation/widgets/watchlist_list_item.dart
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
+import 'package:crypto_portfolio_tracker/core/utils/number_formatter.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/watchlist_coin_entity.dart';
-import '../cubit/watchlist_cubit.dart';
 import 'watchlist_sparkline.dart';
 
 class WatchlistListItem extends StatelessWidget {
@@ -17,98 +18,106 @@ class WatchlistListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coin = item.coin;
+
     final isPositive = coin.priceChangePercentage24h >= 0;
     final changeColor = AppColors.changeColor(coin.priceChangePercentage24h);
-    final price = NumberFormat.currency(
-      symbol: '\$',
-      decimalDigits: 2,
-    ).format(coin.currentPrice);
 
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-      decoration: AppGlass.decoration(),
-      child: Row(
-        children: [
-          ClipOval(
-            child: Image.network(
-              coin.image,
-              width: 40.w,
-              height: 40.h,
-              errorBuilder: (_, __, ___) => CircleAvatar(
-                radius: 20.w,
-                backgroundColor: AppColors.bgElevated,
-                child: Text(
-                  coin.symbol.characters.first,
-                  style: AppTextStyles.tokenSymbol,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final price = NumberFormatter.usdCurrencyFormat.format(coin.currentPrice);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18.r),
+        onTap: () => context.push('/coin/${coin.id}'),
+        child: Ink(
+          decoration: AppGlass.decoration(),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            child: Row(
               children: [
-                Text(
-                  coin.name,
-                  style: AppTextStyles.bodyLarge,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  'Rank #${coin.marketCapRank}',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textTertiary,
+                ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: coin.image,
+                    width: 40.w,
+                    height: 40.w,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => CircleAvatar(
+                      radius: 20.r,
+                      backgroundColor: AppColors.bgElevated,
+                    ),
+                    errorWidget: (_, __, ___) => CircleAvatar(
+                      radius: 20.r,
+                      backgroundColor: AppColors.bgElevated,
+                      child: Text(
+                        coin.symbol.characters.first.toUpperCase(),
+                        style: AppTextStyles.tokenSymbol,
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 56.w,
-            height: 24.h,
-            child: WatchlistSparkline(
-              values: coin.sparkline,
-              color: changeColor,
-            ),
-          ),
-          SizedBox(width: 10.w),
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(price, style: AppTextStyles.bodyLarge),
-                SizedBox(height: 2.h),
-                Text(
-                  '${isPositive ? '+' : ''}${coin.priceChangePercentage24h.toStringAsFixed(2)}%',
-                  style: AppTextStyles.percentChange.copyWith(
+
+                SizedBox(width: 12.w),
+
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        coin.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyLarge,
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        '${coin.symbol.toUpperCase()} • Rank #${coin.marketCapRank}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(width: 12.w),
+
+                SizedBox(
+                  width: 56.w,
+                  height: 24.h,
+                  child: WatchlistSparkline(
+                    values: coin.sparkline,
                     color: changeColor,
                   ),
                 ),
+
+                SizedBox(width: 12.w),
+
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        price,
+                        style: AppTextStyles.bodyLarge,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        '${isPositive ? '+' : ''}${coin.priceChangePercentage24h.toStringAsFixed(2)}%',
+                        style: AppTextStyles.percentChange.copyWith(
+                          color: changeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          SizedBox(width: 6.w),
-          InkWell(
-            borderRadius: BorderRadius.circular(999.r),
-            onTap: () => context.read<WatchlistCubit>().removeCoin(coin.id),
-            child: Container(
-              width: 36.w,
-              height: 36.h,
-              decoration: const BoxDecoration(
-                color: AppColors.negativeBg,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.delete_outline,
-                color: AppColors.negative,
-                size: 18.sp,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

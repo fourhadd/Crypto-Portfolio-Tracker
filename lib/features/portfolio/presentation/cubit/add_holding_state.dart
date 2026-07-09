@@ -1,4 +1,3 @@
-// features/portfolio/presentation/cubit/add_holding_state.dart
 import 'package:equatable/equatable.dart';
 import 'package:crypto_portfolio_tracker/core/domain/entities/coin_entity.dart';
 
@@ -27,6 +26,24 @@ class AddHoldingState extends Equatable {
       coin != null && (quantity ?? 0) > 0 && (buyPrice ?? 0) > 0;
 
   bool get isSubmitting => status == AddHoldingStatus.submitting;
+
+  AddHoldingState copyWith({
+    CoinEntity? coin,
+    double? quantity,
+    double? buyPrice,
+    DateTime? buyDate,
+    AddHoldingStatus? status,
+    String? errorMessage,
+  }) {
+    return AddHoldingState(
+      coin: coin ?? this.coin,
+      quantity: quantity ?? this.quantity,
+      buyPrice: buyPrice ?? this.buyPrice,
+      buyDate: buyDate ?? this.buyDate,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 
   @override
   List<Object?> get props => [

@@ -29,12 +29,9 @@ class _FilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MarketCubit, MarketState>(
-      buildWhen: (previous, current) => current is MarketLoaded,
-      builder: (context, state) {
-        final cubit = context.read<MarketCubit>();
-        final isFilterActive = cubit.hasActiveFilters;
-
+    return BlocSelector<MarketCubit, MarketState, bool>(
+      selector: (state) => state.hasActiveFilters,
+      builder: (context, isFilterActive) {
         return GestureDetector(
           onTap: () => MarketFilterBottomSheet.show(context),
           child: Stack(

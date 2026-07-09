@@ -65,8 +65,11 @@ class CompositionPage extends StatelessWidget {
                 const CompositionToggle(),
                 SizedBox(height: 28.h),
                 BlocBuilder<PortfolioCubit, PortfolioState>(
+                  buildWhen: (prev, curr) =>
+                      prev.status != curr.status || prev.items != curr.items,
                   builder: (context, state) {
-                    if (state is! PortfolioLoaded || state.isEmpty) {
+                    if (state.status != PortfolioStatus.loaded ||
+                        state.isEmpty) {
                       return Padding(
                         padding: EdgeInsets.only(top: 60.h),
                         child: Center(

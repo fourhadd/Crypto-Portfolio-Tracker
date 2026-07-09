@@ -18,6 +18,9 @@ class DioClient {
         receiveTimeout: const Duration(
           seconds: ApiConstants.requestTimeoutSeconds,
         ),
+        sendTimeout: const Duration(
+          seconds: ApiConstants.requestTimeoutSeconds,
+        ),
         headers: {
           'Accept': 'application/json',
           if (ApiConstants.demoApiKey.isNotEmpty)

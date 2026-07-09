@@ -1,4 +1,5 @@
 // features/compare/presentation/widgets/coin_picker_bottom_sheet.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -113,18 +114,19 @@ class _CoinPickerBottomSheetState extends State<CoinPickerBottomSheet> {
                   Expanded(
                     child: BlocBuilder<MarketCubit, MarketState>(
                       buildWhen: (prev, curr) =>
-                          curr is MarketLoaded || curr is MarketError,
+                          curr.status == MarketStatus.loaded ||
+                          curr.status == MarketStatus.error,
                       builder: (context, state) {
-                        if (state is MarketError) {
+                        if (state.status == MarketStatus.error) {
                           return Center(
                             child: Text(
-                              state.message,
+                              state.errorMessage ?? 'Xəta baş verdi',
                               style: AppTextStyles.bodySmall,
                             ),
                           );
                         }
 
-                        if (state is! MarketLoaded) {
+                        if (state.status != MarketStatus.loaded) {
                           return const Center(
                             child: CircularProgressIndicator(
                               color: AppColors.accentAmber,
@@ -159,11 +161,13 @@ class _CoinPickerBottomSheetState extends State<CoinPickerBottomSheet> {
                               contentPadding: EdgeInsets.zero,
                               onTap: () => Navigator.of(context).pop(coin),
                               leading: ClipOval(
-                                child: Image.network(
-                                  coin.image,
+                                child: CachedNetworkImage(
+                                  imageUrl: coin.image,
                                   width: 32.w,
                                   height: 32.h,
-                                  errorBuilder: (_, __, ___) => Icon(
+                                  placeholder: (_, __) =>
+                                      SizedBox(width: 32.w, height: 32.h),
+                                  errorWidget: (_, __, ___) => Icon(
                                     Icons.currency_bitcoin,
                                     size: 32.w,
                                     color: AppColors.textSecondary,

@@ -1,4 +1,5 @@
 // features/portfolio/presentation/pages/sell_holding_page.dart
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/entities/portfolio_coin_entity.dart';
 import '../../domain/usecases/sell_holding_usecase.dart';
 import '../cubit/portfolio_cubit.dart';
 import '../cubit/portfolio_state.dart';
@@ -31,66 +33,83 @@ class SellHoldingPage extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: BlocBuilder<PortfolioCubit, PortfolioState>(
-          buildWhen: (prev, curr) => prev != curr,
-          builder: (context, state) {
-            if (state is! PortfolioLoaded) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.accentAmber),
-              );
-            }
+        child:
+            BlocSelector<
+              PortfolioCubit,
+              PortfolioState,
+              (PortfolioStatus, PortfolioCoinEntity?)
+            >(
+              selector: (state) {
+                if (state.status != PortfolioStatus.loaded) {
+                  return (state.status, null);
+                }
+                // Fix #22: previously used `matches.first`, which silently
+                // picked one lot and ignored the rest when a coin had
+                // multiple purchase entries. Fix #21 now merges all
+                // purchases of the same coin into a single weighted-average
+                // lot at write time, so there is at most one match here —
+                // firstWhereOrNull is just a defensive guard against nulls.
+                final item = state.items.firstWhereOrNull(
+                  (i) => i.holding.coinId == coinId,
+                );
+                return (state.status, item);
+              },
+              builder: (context, value) {
+                final (status, item) = value;
 
-            final matches = state.items.where(
-              (item) => item.holding.coinId == coinId,
-            );
+                if (status != PortfolioStatus.loaded) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.accentAmber,
+                    ),
+                  );
+                }
 
-            if (matches.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24.w),
-                  child: Text(
-                    'Bu coin portfelinizdə tapılmadı.',
-                    style: AppTextStyles.bodyMedium,
-                    textAlign: TextAlign.center,
+                if (item == null) {
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.w),
+                      child: Text(
+                        'Bu coin portfelinizdə tapılmadı.',
+                        style: AppTextStyles.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+
+                return BlocProvider(
+                  create: (_) => SellHoldingCubit(
+                    sellHoldingUseCase: sl<SellHoldingUseCase>(),
+                    holdingId: item.holding.id,
+                    maxAmount: item.holding.amount,
                   ),
-                ),
-              );
-            }
-
-            final item = matches.first;
-
-            return BlocProvider(
-              create: (_) => SellHoldingCubit(
-                sellHoldingUseCase: sl<SellHoldingUseCase>(),
-                holdingId: item.holding.id,
-                maxAmount: item.holding.amount,
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 12.h),
-                    SellHoldingHoldingCard(
-                      coin: item.coin,
-                      holding: item.holding,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 12.h),
+                        SellHoldingHoldingCard(
+                          coin: item.coin,
+                          holding: item.holding,
+                        ),
+                        SizedBox(height: 20.h),
+                        SellHoldingAmountInput(
+                          coinSymbol: item.coin.symbol,
+                          maxAmount: item.holding.amount,
+                        ),
+                        SizedBox(height: 16.h),
+                        SellHoldingStatsRow(coinPrice: item.coin.currentPrice),
+                        const Spacer(),
+                        SellHoldingConfirmButton(coinSymbol: item.coin.symbol),
+                        SizedBox(height: 16.h),
+                      ],
                     ),
-                    SizedBox(height: 20.h),
-                    SellHoldingAmountInput(
-                      coinSymbol: item.coin.symbol,
-                      maxAmount: item.holding.amount,
-                    ),
-                    SizedBox(height: 16.h),
-                    SellHoldingStatsRow(coinPrice: item.coin.currentPrice),
-                    const Spacer(),
-                    SellHoldingConfirmButton(coinSymbol: item.coin.symbol),
-                    SizedBox(height: 16.h),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+                  ),
+                );
+              },
+            ),
       ),
     );
   }

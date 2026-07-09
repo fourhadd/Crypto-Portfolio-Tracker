@@ -29,7 +29,11 @@ class CoinDetailChart extends StatelessWidget {
                     borderRadius: 16.r,
                   ),
                 )
-              : _Chart(coin: state.coin, points: state.chartPoints),
+              : _Chart(
+                  coin: state.coin,
+                  points: state.chartPoints,
+                  spots: state.chartSpots,
+                ),
         );
       },
     );
@@ -39,8 +43,9 @@ class CoinDetailChart extends StatelessWidget {
 class _Chart extends StatelessWidget {
   final dynamic coin;
   final List<dynamic> points;
+  final List<FlSpot> spots;
 
-  const _Chart({required this.coin, required this.points});
+  const _Chart({required this.coin, required this.points, required this.spots});
 
   @override
   Widget build(BuildContext context) {
@@ -48,11 +53,6 @@ class _Chart extends StatelessWidget {
 
     final isPositive = coin.priceChangePercentage24h >= 0;
     final lineColor = isPositive ? AppColors.positive : AppColors.negative;
-
-    final spots = <FlSpot>[
-      for (var i = 0; i < points.length; i++)
-        FlSpot(i.toDouble(), points[i].price as double),
-    ];
 
     final prices = points.map((p) => p.price as double).toList();
     final minY = prices.reduce((a, b) => a < b ? a : b);

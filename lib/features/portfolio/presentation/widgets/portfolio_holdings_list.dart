@@ -21,7 +21,10 @@ class PortfolioHoldingsList extends StatelessWidget {
         if (index == items.length) {
           return const _AddHoldingButton();
         }
-        return PortfolioHoldingTile(item: items[index]);
+        return PortfolioHoldingTile(
+          key: ValueKey(items[index].holding.id),
+          item: items[index],
+        );
       },
     );
   }

@@ -1,10 +1,12 @@
 // features/coin_detail/presentation/widgets/coin_detail_app_bar.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../domain/entities/coin_detail_entity.dart';
 import '../cubit/coin_detail_cubit.dart';
 import '../cubit/coin_detail_state.dart';
 
@@ -31,21 +33,21 @@ class _CoinTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CoinDetailCubit, CoinDetailState>(
-      buildWhen: (previous, current) => current is CoinDetailLoaded,
-      builder: (context, state) {
-        if (state is! CoinDetailLoaded) return const SizedBox.shrink();
-        final coin = state.coin;
+    return BlocSelector<CoinDetailCubit, CoinDetailState, CoinDetailEntity?>(
+      selector: (state) => state is CoinDetailLoaded ? state.coin : null,
+      builder: (context, coin) {
+        if (coin == null) return const SizedBox.shrink();
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipOval(
-              child: Image.network(
-                coin.image,
+              child: CachedNetworkImage(
+                imageUrl: coin.image,
                 width: 24.w,
                 height: 24.h,
-                errorBuilder: (_, __, ___) => Icon(
+                placeholder: (_, __) => SizedBox(width: 24.w, height: 24.h),
+                errorWidget: (_, __, ___) => Icon(
                   Icons.currency_bitcoin,
                   size: 20.sp,
                   color: AppColors.textTertiary,
@@ -73,11 +75,9 @@ class _WatchlistButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CoinDetailCubit, CoinDetailState>(
-      buildWhen: (previous, current) => current is CoinDetailLoaded,
-      builder: (context, state) {
-        final isInWatchlist = state is CoinDetailLoaded && state.isInWatchlist;
-
+    return BlocSelector<CoinDetailCubit, CoinDetailState, bool>(
+      selector: (state) => state is CoinDetailLoaded && state.isInWatchlist,
+      builder: (context, isInWatchlist) {
         return _CircleIconButton(
           icon: isInWatchlist ? Icons.star_rounded : Icons.star_border_rounded,
           iconColor: isInWatchlist ? AppColors.accentAmber : null,

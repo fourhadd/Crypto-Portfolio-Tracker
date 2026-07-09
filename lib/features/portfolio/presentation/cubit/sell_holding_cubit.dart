@@ -1,4 +1,3 @@
-// features/portfolio/presentation/cubit/sell_holding_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/sell_holding_usecase.dart';
@@ -36,12 +35,14 @@ class SellHoldingCubit extends Cubit<SellHoldingState> {
         holdingId: holdingId,
         sellAmount: state.sellAmount,
       );
+      if (isClosed) return;
       emit(state.copyWith(status: SellHoldingStatus.success));
     } catch (_) {
+      if (isClosed) return;
       emit(
         state.copyWith(
           status: SellHoldingStatus.failure,
-          errorMessage: 'Satış zamanı xəta baş verdi',
+          errorMessage: 'error in sell time',
         ),
       );
     }

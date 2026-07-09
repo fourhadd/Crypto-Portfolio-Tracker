@@ -1,4 +1,5 @@
 // features/portfolio/presentation/widgets/coin_select_field.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -36,11 +37,12 @@ class CoinSelectField extends StatelessWidget {
               children: [
                 if (state.coin != null) ...[
                   ClipOval(
-                    child: Image.network(
-                      state.coin!.image,
+                    child: CachedNetworkImage(
+                      imageUrl: state.coin!.image,
                       width: 22.w,
                       height: 22.w,
-                      errorBuilder: (_, __, ___) => Icon(
+                      placeholder: (_, __) => SizedBox(width: 22.w, height: 22.w),
+                      errorWidget: (_, __, ___) => Icon(
                         Icons.currency_bitcoin,
                         size: 22.w,
                         color: AppColors.textSecondary,

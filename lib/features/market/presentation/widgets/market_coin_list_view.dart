@@ -17,19 +17,16 @@ class MarketCoinListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MarketCubit, MarketState>(
-      buildWhen: (previous, current) =>
-          current is MarketLoading ||
-          current is MarketLoaded ||
-          current is MarketError,
+      buildWhen: (previous, current) => previous.status != current.status,
       builder: (context, state) {
-        if (state is MarketLoading) {
+        if (state.status == MarketStatus.loading) {
           return const CoreCoinListSkeleton(itemCount: 8);
         }
 
-        if (state is MarketError) {
+        if (state.status == MarketStatus.error) {
           return Center(
             child: Text(
-              state.message,
+              state.errorMessage ?? 'Xəta baş verdi',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.negative,
               ),
@@ -37,7 +34,7 @@ class MarketCoinListView extends StatelessWidget {
           );
         }
 
-        if (state is MarketLoaded) {
+        if (state.status == MarketStatus.loaded) {
           if (state.coins.isEmpty) {
             return Center(
               child: Text('Nəticə tapılmadı', style: AppTextStyles.bodyMedium),

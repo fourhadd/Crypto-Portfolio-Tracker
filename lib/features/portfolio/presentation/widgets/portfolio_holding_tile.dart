@@ -1,9 +1,10 @@
 // features/portfolio/presentation/widgets/portfolio_holding_tile.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
+import 'package:crypto_portfolio_tracker/core/utils/number_formatter.dart';
 
 import '../../domain/entities/portfolio_coin_entity.dart';
 
@@ -31,11 +32,12 @@ class PortfolioHoldingTile extends StatelessWidget {
           child: Row(
             children: [
               ClipOval(
-                child: Image.network(
-                  item.coin.image,
+                child: CachedNetworkImage(
+                  imageUrl: item.coin.image,
                   width: 36.w,
                   height: 36.w,
-                  errorBuilder: (_, __, ___) => Icon(
+                  placeholder: (_, __) => SizedBox(width: 36.w, height: 36.w),
+                  errorWidget: (_, __, ___) => Icon(
                     Icons.currency_bitcoin,
                     size: 36.w,
                     color: AppColors.textSecondary,
@@ -49,7 +51,8 @@ class PortfolioHoldingTile extends StatelessWidget {
                   children: [
                     Text(item.coin.name, style: AppTextStyles.bodyMedium),
                     Text(
-                      '${item.holding.amount} ${item.coin.symbol.toUpperCase()}',
+                      '${NumberFormatter.formatCoinAmount(item.holding.amount)} '
+                      '${item.coin.symbol.toUpperCase()}',
                       style: AppTextStyles.bodySmall,
                     ),
                   ],
@@ -59,7 +62,7 @@ class PortfolioHoldingTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '\$${NumberFormat('#,##0.00').format(item.currentValue)}',
+                    NumberFormatter.formatCurrency(item.currentValue),
                     style: AppTextStyles.bodyMedium,
                   ),
                   Text(

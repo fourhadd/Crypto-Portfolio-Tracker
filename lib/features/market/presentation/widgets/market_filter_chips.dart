@@ -15,13 +15,10 @@ class MarketFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MarketCubit, MarketState>(
-      buildWhen: (previous, current) => current is MarketLoaded,
-      builder: (context, state) {
+    return BlocSelector<MarketCubit, MarketState, String>(
+      selector: (state) => state.currentFilter,
+      builder: (context, currentFilter) {
         final cubit = context.read<MarketCubit>();
-        final currentFilter = state is MarketLoaded
-            ? state.currentFilter
-            : 'All';
 
         return SizedBox(
           height: 36.h,

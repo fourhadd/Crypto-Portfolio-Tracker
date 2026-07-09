@@ -1,5 +1,6 @@
 // features/coin_detail/presentation/pages/coin_detail_page.dart
 import 'package:crypto_portfolio_tracker/core/di/injection_container.dart';
+import 'package:crypto_portfolio_tracker/core/domain/entities/coin_entity.dart';
 import 'package:crypto_portfolio_tracker/features/coin_detail/domain/entities/coin_detail_entity_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,8 +37,18 @@ class _CoinDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: BlocBuilder<CoinDetailCubit, CoinDetailState>(
-          builder: (context, state) {
+        // Fix #1: previously a single BlocBuilder wrapped the whole page,
+        // so every emission (chart range change, isChartLoading toggle,
+        // watchlist star) rebuilt the entire scroll view — including the
+        // chart. We only need to rebuild here when the state *type*
+        // changes (Loading -> Loaded -> Error); the child widgets below
+        // already have their own scoped BlocBuilder/buildWhen for their
+        // specific fields.
+        child: BlocSelector<CoinDetailCubit, CoinDetailState, Type>(
+          selector: (state) => state.runtimeType,
+          builder: (context, _) {
+            final state = context.read<CoinDetailCubit>().state;
+
             if (state is CoinDetailLoading) {
               return const CoinDetailSkeleton();
             }
@@ -47,32 +58,43 @@ class _CoinDetailView extends StatelessWidget {
             }
 
             if (state is CoinDetailLoaded) {
-              return SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 8.h),
-                    const CoinDetailAppBar(),
-                    SizedBox(height: 24.h),
-                    const CoinDetailPriceSection(),
-                    SizedBox(height: 24.h),
-                    const CoinDetailRangeSelector(),
-                    SizedBox(height: 8.h),
-                    const CoinDetailChart(),
-                    SizedBox(height: 24.h),
-                    const CoinDetailStatsGrid(),
-                    SizedBox(height: 24.h),
-                    CoinDetailActionButtons(coin: state.coin.toCoinEntity()),
-                    SizedBox(height: 24.h),
-                  ],
-                ),
-              );
+              return _LoadedBody(coin: state.coin.toCoinEntity());
             }
 
             return const SizedBox.shrink();
           },
         ),
+      ),
+    );
+  }
+}
+
+class _LoadedBody extends StatelessWidget {
+  final CoinEntity coin;
+
+  const _LoadedBody({required this.coin});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 8.h),
+          const CoinDetailAppBar(),
+          SizedBox(height: 24.h),
+          const CoinDetailPriceSection(),
+          SizedBox(height: 24.h),
+          const CoinDetailRangeSelector(),
+          SizedBox(height: 8.h),
+          const CoinDetailChart(),
+          SizedBox(height: 24.h),
+          const CoinDetailStatsGrid(),
+          SizedBox(height: 24.h),
+          CoinDetailActionButtons(coin: coin),
+          SizedBox(height: 24.h),
+        ],
       ),
     );
   }

@@ -82,8 +82,8 @@ class AppRouter {
                     return cubit;
                   },
                 ),
-                BlocProvider<MarketCubit>(
-                  create: (context) => sl<MarketCubit>()..fetchMarkets(),
+                BlocProvider<MarketCubit>.value(
+                  value: sl<MarketCubit>()..fetchIfNeeded(),
                 ),
               ],
               child: const ComparePage(),
@@ -95,8 +95,6 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/portfolio/add',
         pageBuilder: (context, state) {
-          // Coin Detail-dən "Buy" ilə gəlirsə, extra-da CoinEntity ötürülür
-          // və AddHoldingCubit yaradılan kimi bu coin preset edilir.
           final presetCoin = state.extra is CoinEntity
               ? state.extra as CoinEntity
               : null;
@@ -114,8 +112,8 @@ class AppRouter {
                     return cubit;
                   },
                 ),
-                BlocProvider<MarketCubit>(
-                  create: (context) => sl<MarketCubit>()..fetchMarkets(),
+                BlocProvider<MarketCubit>.value(
+                  value: sl<MarketCubit>()..fetchIfNeeded(),
                 ),
               ],
               child: const AddHoldingPage(),
@@ -180,8 +178,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/market',
-                builder: (context, state) => BlocProvider(
-                  create: (context) => sl<MarketCubit>()..fetchMarkets(),
+                builder: (context, state) => BlocProvider<MarketCubit>.value(
+                  value: sl<MarketCubit>()..fetchIfNeeded(),
                   child: const MarketPage(),
                 ),
               ),

@@ -20,5 +20,26 @@ class PortfolioCoinEntity extends Equatable {
       investedValue == 0 ? 0 : (profitLoss / investedValue) * 100;
 
   @override
-  List<Object?> get props => [holding, coin];
+  List<Object?> get props => [
+    holding,
+    // coin.sparkline is a 168-point list; comparing it on every
+    // equality check (used by BlocSelector/buildWhen) is expensive
+    // and doesn't affect anything the portfolio UI displays.
+    coin.id,
+    coin.symbol,
+    coin.name,
+    coin.image,
+    coin.currentPrice,
+    coin.marketCap,
+    coin.marketCapRank,
+    coin.totalVolume,
+    coin.priceChangePercentage24h,
+    coin.high24h,
+    coin.low24h,
+    coin.circulatingSupply,
+    coin.totalSupply,
+    coin.ath,
+    coin.atl,
+    coin.athChangePercentage,
+  ];
 }

@@ -1,4 +1,5 @@
 // core/shared/widgets/core_coin_list_tile.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -6,6 +7,7 @@ import '../../domain/entities/coin_entity.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../utils/number_formatter.dart';
+import '../../../features/watchlist/presentation/widgets/watchlist_sparkline.dart';
 
 class CoreCoinListTile extends StatelessWidget {
   final int rank;
@@ -47,11 +49,16 @@ class CoreCoinListTile extends StatelessWidget {
             ),
 
             ClipOval(
-              child: Image.network(
-                coin.image,
+              child: CachedNetworkImage(
+                imageUrl: coin.image,
                 width: 32.w,
                 height: 32.h,
-                errorBuilder: (_, __, ___) => Container(
+                placeholder: (_, __) => Container(
+                  width: 32.w,
+                  height: 32.h,
+                  color: AppColors.bgElevated,
+                ),
+                errorWidget: (_, __, ___) => Container(
                   width: 32.w,
                   height: 32.h,
                   color: AppColors.bgElevated,
@@ -89,9 +96,21 @@ class CoreCoinListTile extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: Container(
-                  height: 1.5.h,
+                  height: 32.h,
                   margin: EdgeInsets.symmetric(horizontal: 12.w),
-                  color: isPositive ? AppColors.positive : AppColors.negative,
+                  child: coin.sparkline.length >= 2
+                      ? WatchlistSparkline(
+                          values: coin.sparkline,
+                          color: isPositive
+                              ? AppColors.positive
+                              : AppColors.negative,
+                        )
+                      : Container(
+                          height: 1.5.h,
+                          color: isPositive
+                              ? AppColors.positive
+                              : AppColors.negative,
+                        ),
                 ),
               ),
             Expanded(

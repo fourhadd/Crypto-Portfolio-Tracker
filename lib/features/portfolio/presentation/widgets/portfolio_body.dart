@@ -14,25 +14,30 @@ class PortfolioBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PortfolioCubit, PortfolioState>(
+      buildWhen: (prev, curr) =>
+          prev.status != curr.status || prev.items != curr.items,
       builder: (context, state) {
-        if (state is PortfolioLoading || state is PortfolioInitial) {
+        if (state.status == PortfolioStatus.loading ||
+            state.status == PortfolioStatus.initial) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.accentAmber),
           );
         }
 
-        if (state is PortfolioError) {
+        if (state.status == PortfolioStatus.error) {
           return Center(
-            child: Text(state.message, style: AppTextStyles.bodySmall),
+            child: Text(
+              state.errorMessage ?? 'Xəta baş verdi',
+              style: AppTextStyles.bodySmall,
+            ),
           );
         }
 
-        final loaded = state as PortfolioLoaded;
-        if (loaded.isEmpty) {
+        if (state.isEmpty) {
           return const PortfolioEmptyState();
         }
 
-        return PortfolioHoldingsList(items: loaded.items);
+        return PortfolioHoldingsList(items: state.items);
       },
     );
   }

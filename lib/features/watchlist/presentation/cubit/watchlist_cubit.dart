@@ -1,4 +1,3 @@
-// features/watchlist/presentation/cubit/watchlist_cubit.dart
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,32 +15,45 @@ class WatchlistCubit extends Cubit<WatchlistState> {
   WatchlistCubit({
     required this.watchWatchlistCoins,
     required this.removeFromWatchlist,
-  }) : super(const WatchlistInitial());
+  }) : super(const WatchlistState());
 
   void startWatching({String vsCurrency = 'usd'}) {
-    emit(const WatchlistLoading());
+    emit(state.copyWith(status: WatchlistStatus.loading));
 
     _subscription?.cancel();
     _subscription = watchWatchlistCoins(vsCurrency: vsCurrency).listen(
       (result) {
+        if (isClosed) return;
         result.fold(
-          (failure) => emit(WatchlistError(failure.message)),
-          (coins) => emit(WatchlistLoaded(coins)),
+          (failure) => emit(
+            state.copyWith(
+              status: WatchlistStatus.error,
+              errorMessage: failure.message,
+            ),
+          ),
+          (coins) => emit(
+            state.copyWith(status: WatchlistStatus.loaded, coins: coins),
+          ),
         );
       },
       onError: (_) {
-        emit(const WatchlistError('Naməlum xəta baş verdi'));
+        if (isClosed) return;
+        emit(
+          state.copyWith(
+            status: WatchlistStatus.error,
+            errorMessage: 'Naməlum xəta baş verdi',
+          ),
+        );
       },
     );
   }
 
   Future<void> removeCoin(String coinId) async {
-    final current = state;
-    if (current is WatchlistLoaded) {
-      final optimistic = current.coins
+    if (state.status == WatchlistStatus.loaded) {
+      final optimistic = state.coins
           .where((item) => item.coin.id != coinId)
           .toList();
-      emit(WatchlistLoaded(optimistic));
+      emit(state.copyWith(coins: optimistic));
     }
 
     await removeFromWatchlist(coinId);

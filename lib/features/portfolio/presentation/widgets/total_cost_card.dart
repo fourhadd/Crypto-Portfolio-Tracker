@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
+import 'package:crypto_portfolio_tracker/core/utils/number_formatter.dart';
 
 import '../cubit/add_holding_cubit.dart';
 import '../cubit/add_holding_state.dart';
@@ -38,7 +38,7 @@ class TotalCostCard extends StatelessWidget {
               Text('Total Cost', style: AppTextStyles.bodySmall),
               SizedBox(height: 4.h),
               Text(
-                '\$${NumberFormat.compactCurrency(decimalDigits: 2, symbol: '').format(totalCost)}',
+                '\$${NumberFormatter.compactUsdFormat.format(totalCost)}',
                 style: AppTextStyles.headingMedium.copyWith(
                   color: AppColors.accentAmber,
                 ),

@@ -1,4 +1,3 @@
-// features/portfolio/presentation/cubit/add_holding_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:crypto_portfolio_tracker/core/domain/entities/coin_entity.dart';
 
@@ -12,61 +11,25 @@ class AddHoldingCubit extends Cubit<AddHoldingState> {
     : super(AddHoldingState.initial());
 
   void selectCoin(CoinEntity coin) {
-    emit(
-      AddHoldingState(
-        coin: coin,
-        quantity: state.quantity,
-        buyPrice: coin.currentPrice,
-        buyDate: state.buyDate,
-      ),
-    );
+    emit(state.copyWith(coin: coin, buyPrice: coin.currentPrice));
   }
 
   void updateQuantity(String value) {
-    emit(
-      AddHoldingState(
-        coin: state.coin,
-        quantity: double.tryParse(value.replaceAll(',', '.')),
-        buyPrice: state.buyPrice,
-        buyDate: state.buyDate,
-      ),
-    );
+    emit(state.copyWith(quantity: double.tryParse(value.replaceAll(',', '.'))));
   }
 
   void updateBuyPrice(String value) {
-    emit(
-      AddHoldingState(
-        coin: state.coin,
-        quantity: state.quantity,
-        buyPrice: double.tryParse(value.replaceAll(',', '.')),
-        buyDate: state.buyDate,
-      ),
-    );
+    emit(state.copyWith(buyPrice: double.tryParse(value.replaceAll(',', '.'))));
   }
 
   void updateBuyDate(DateTime date) {
-    emit(
-      AddHoldingState(
-        coin: state.coin,
-        quantity: state.quantity,
-        buyPrice: state.buyPrice,
-        buyDate: date,
-      ),
-    );
+    emit(state.copyWith(buyDate: date));
   }
 
   Future<void> submit() async {
     if (!state.isValid || state.isSubmitting) return;
 
-    emit(
-      AddHoldingState(
-        coin: state.coin,
-        quantity: state.quantity,
-        buyPrice: state.buyPrice,
-        buyDate: state.buyDate,
-        status: AddHoldingStatus.submitting,
-      ),
-    );
+    emit(state.copyWith(status: AddHoldingStatus.submitting));
 
     try {
       await addHoldingUseCase(
@@ -75,24 +38,14 @@ class AddHoldingCubit extends Cubit<AddHoldingState> {
         buyPrice: state.buyPrice!,
         buyDate: state.buyDate,
       );
-      emit(
-        AddHoldingState(
-          coin: state.coin,
-          quantity: state.quantity,
-          buyPrice: state.buyPrice,
-          buyDate: state.buyDate,
-          status: AddHoldingStatus.success,
-        ),
-      );
+      if (isClosed) return;
+      emit(state.copyWith(status: AddHoldingStatus.success));
     } catch (_) {
+      if (isClosed) return;
       emit(
-        AddHoldingState(
-          coin: state.coin,
-          quantity: state.quantity,
-          buyPrice: state.buyPrice,
-          buyDate: state.buyDate,
+        state.copyWith(
           status: AddHoldingStatus.failure,
-          errorMessage: 'Holding əlavə edilərkən xəta baş verdi',
+          errorMessage: 'error in add holding time',
         ),
       );
     }

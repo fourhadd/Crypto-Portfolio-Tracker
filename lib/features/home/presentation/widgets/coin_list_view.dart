@@ -17,14 +17,13 @@ class CoinListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (previous, current) =>
-          previous.runtimeType != current.runtimeType,
+      buildWhen: (previous, current) => previous.status != current.status,
       builder: (context, state) {
-        if (state is HomeError) {
-          return _MessageBox(text: state.message);
+        if (state.status == HomeStatus.error) {
+          return _MessageBox(text: state.errorMessage ?? 'Xəta baş verdi');
         }
 
-        if (state is HomeLoaded) {
+        if (state.status == HomeStatus.loaded) {
           if (state.coins.isEmpty) {
             return const _MessageBox(text: 'Coin tapılmadı');
           }

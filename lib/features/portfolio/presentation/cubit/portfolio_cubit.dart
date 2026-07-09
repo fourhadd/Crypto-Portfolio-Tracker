@@ -1,6 +1,6 @@
-// features/portfolio/presentation/cubit/portfolio_cubit.dart
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/add_holding_usecase.dart';
@@ -19,26 +19,44 @@ class PortfolioCubit extends Cubit<PortfolioState> {
     required this.watchPortfolioCoins,
     required this.addHoldingUseCase,
     required this.removeHoldingUseCase,
-  }) : super(const PortfolioInitial());
+  }) : super(const PortfolioState());
 
   void startWatching({String vsCurrency = 'usd'}) {
-    emit(const PortfolioLoading());
+    emit(state.copyWith(status: PortfolioStatus.loading));
 
     _subscription?.cancel();
     _subscription = watchPortfolioCoins(vsCurrency: vsCurrency).listen(
       (result) {
-        result.fold((failure) {
-          // ignore: avoid_print
-          print('PORTFOLIO FAILURE: ${failure.message}');
-          emit(PortfolioError(failure.message));
-        }, (items) => emit(PortfolioLoaded(items)));
+        if (isClosed) return;
+        result.fold(
+          (failure) {
+            if (kDebugMode) {
+              debugPrint('PORTFOLIO FAILURE: ${failure.message}');
+            }
+            emit(
+              state.copyWith(
+                status: PortfolioStatus.error,
+                errorMessage: failure.message,
+              ),
+            );
+          },
+          (items) => emit(
+            state.copyWith(status: PortfolioStatus.loaded, items: items),
+          ),
+        );
       },
       onError: (e, st) {
-        // ignore: avoid_print
-        print('PORTFOLIO STREAM ERROR: $e');
-        // ignore: avoid_print
-        print('STACK TRACE: $st');
-        emit(const PortfolioError('Naməlum xəta baş verdi'));
+        if (isClosed) return;
+        if (kDebugMode) {
+          debugPrint('PORTFOLIO STREAM ERROR: $e');
+          debugPrint('STACK TRACE: $st');
+        }
+        emit(
+          state.copyWith(
+            status: PortfolioStatus.error,
+            errorMessage: 'Naməlum xəta baş verdi',
+          ),
+        );
       },
     );
   }
@@ -58,12 +76,11 @@ class PortfolioCubit extends Cubit<PortfolioState> {
   }
 
   Future<void> removeHolding(String holdingId) async {
-    final current = state;
-    if (current is PortfolioLoaded) {
-      final optimistic = current.items
+    if (state.status == PortfolioStatus.loaded) {
+      final optimistic = state.items
           .where((item) => item.holding.id != holdingId)
           .toList();
-      emit(PortfolioLoaded(optimistic));
+      emit(state.copyWith(items: optimistic));
     }
 
     await removeHoldingUseCase(holdingId);

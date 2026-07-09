@@ -1,4 +1,5 @@
 // features/portfolio/presentation/widgets/sell_holding_holding_card.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -27,12 +28,17 @@ class SellHoldingHoldingCard extends StatelessWidget {
       child: Row(
         children: [
           ClipOval(
-            child: Image.network(
-              coin.image,
+            child: CachedNetworkImage(
+              imageUrl: coin.image,
               width: 48.w,
               height: 48.w,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              placeholder: (_, __) => Container(
+                width: 48.w,
+                height: 48.w,
+                color: AppColors.bgElevatedBorder,
+              ),
+              errorWidget: (_, __, ___) => Container(
                 width: 48.w,
                 height: 48.w,
                 color: AppColors.bgElevatedBorder,

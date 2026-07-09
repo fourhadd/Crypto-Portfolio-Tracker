@@ -1,7 +1,8 @@
-// features/composition/presentation/cubit/composition_state.dart
+import 'package:equatable/equatable.dart';
+
 enum CompositionMode { byValue, byCount }
 
-class CompositionState {
+class CompositionState extends Equatable {
   final CompositionMode mode;
 
   const CompositionState({this.mode = CompositionMode.byValue});
@@ -9,4 +10,7 @@ class CompositionState {
   CompositionState copyWith({CompositionMode? mode}) {
     return CompositionState(mode: mode ?? this.mode);
   }
+
+  @override
+  List<Object?> get props => [mode];
 }

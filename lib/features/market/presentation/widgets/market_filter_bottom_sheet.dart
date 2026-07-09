@@ -37,12 +37,12 @@ class _MarketFilterBottomSheetState extends State<MarketFilterBottomSheet> {
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<MarketCubit>();
+    final state = context.read<MarketCubit>().state;
     _minController = TextEditingController(
-      text: cubit.minPrice?.toString() ?? '',
+      text: state.minPrice?.toString() ?? '',
     );
     _maxController = TextEditingController(
-      text: cubit.maxPrice?.toString() ?? '',
+      text: state.maxPrice?.toString() ?? '',
     );
   }
 

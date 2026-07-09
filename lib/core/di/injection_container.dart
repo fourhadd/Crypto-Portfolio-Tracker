@@ -4,7 +4,6 @@ import 'package:crypto_portfolio_tracker/features/portfolio/data/datasources/por
 import 'package:crypto_portfolio_tracker/features/portfolio/data/repositories/portfolio_repository_impl.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/repositories/portfolio_repository.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/add_holding_usecase.dart';
-import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/get_portfolio_coins_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/remove_holding_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/sell_holding_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/watch_portfolio_coins_usecase.dart';
@@ -147,13 +146,6 @@ Future<void> initDependencies() async {
     () => RemoveHoldingUseCase(sl()),
   );
 
-  sl.registerLazySingleton<GetPortfolioCoinsUseCase>(
-    () => GetPortfolioCoinsUseCase(
-      portfolioRepository: sl(),
-      coinRepository: sl(),
-    ),
-  );
-
   sl.registerLazySingleton<WatchPortfolioCoinsUseCase>(
     () => WatchPortfolioCoinsUseCase(
       portfolioRepository: sl(),
@@ -182,7 +174,7 @@ Future<void> initDependencies() async {
 
   sl.registerFactory<HomeCubit>(() => HomeCubit(sl()));
 
-  sl.registerFactory<MarketCubit>(() => MarketCubit(sl()));
+  sl.registerLazySingleton<MarketCubit>(() => MarketCubit(sl()));
 
   sl.registerFactory<CoinDetailCubit>(
     () => CoinDetailCubit(

@@ -1,4 +1,5 @@
 // features/compare/presentation/widgets/coin_selector_chip.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -43,11 +44,12 @@ class CoinSelectorChip extends StatelessWidget {
           children: [
             if (hasCoin && imageUrl != null && imageUrl!.isNotEmpty)
               ClipOval(
-                child: Image.network(
-                  imageUrl!,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl!,
                   width: 22.w,
                   height: 22.h,
-                  errorBuilder: (_, __, ___) => Icon(
+                  placeholder: (_, __) => SizedBox(width: 22.w, height: 22.h),
+                  errorWidget: (_, __, ___) => Icon(
                     Icons.currency_bitcoin,
                     size: 22.w,
                     color: accentColor,

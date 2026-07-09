@@ -38,7 +38,8 @@ class SettingsDataSection extends StatelessWidget {
     final settingsCubit = context.read<SettingsCubit>();
     final portfolioState = context.read<PortfolioCubit>().state;
 
-    if (portfolioState is! PortfolioLoaded || portfolioState.isEmpty) {
+    if (portfolioState.status != PortfolioStatus.loaded ||
+        portfolioState.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Export ediləcək holding yoxdur')),
       );

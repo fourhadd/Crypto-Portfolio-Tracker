@@ -1,8 +1,10 @@
-// features/watchlist/presentation/widgets/watchlist_list.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../../domain/entities/watchlist_coin_entity.dart';
+import '../cubit/watchlist_cubit.dart';
 import 'watchlist_list_item.dart';
 
 class WatchlistList extends StatelessWidget {
@@ -18,7 +20,29 @@ class WatchlistList extends StatelessWidget {
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         final item = coins[index];
-        return WatchlistListItem(key: ValueKey(item.coin.id), item: item);
+
+        return Slidable(
+          key: ValueKey(item.coin.id),
+
+          endActionPane: ActionPane(
+            motion: const StretchMotion(),
+            extentRatio: 0.28,
+            children: [
+              SlidableAction(
+                onPressed: (_) {
+                  context.read<WatchlistCubit>().removeCoin(item.coin.id);
+                },
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                borderRadius: BorderRadius.circular(18.r),
+                icon: Icons.delete_outline,
+                label: 'Delete',
+              ),
+            ],
+          ),
+
+          child: WatchlistListItem(item: item),
+        );
       },
     );
   }

@@ -1,6 +1,21 @@
 // core/utils/number_formatter.dart
+import 'package:intl/intl.dart';
+
 class NumberFormatter {
   NumberFormatter._();
+
+  // Fix #31: cache intl NumberFormat instances instead of constructing
+  // them fresh inside build() on every rebuild.
+  static final NumberFormat usdFormat = NumberFormat('#,##0.00', 'en_US');
+  static final NumberFormat fourDecimalFormat = NumberFormat('#,##0.0000');
+  static final NumberFormat usdCurrencyFormat = NumberFormat.currency(
+    symbol: '\$',
+    decimalDigits: 2,
+  );
+  static final NumberFormat compactUsdFormat = NumberFormat.compactCurrency(
+    decimalDigits: 2,
+    symbol: '',
+  );
 
   static String formatCurrency(double value, {int decimals = 2}) {
     final isNegative = value < 0;
@@ -32,5 +47,16 @@ class NumberFormatter {
   static String formatPercent(double value) {
     final sign = value >= 0 ? '+' : '';
     return '$sign${value.toStringAsFixed(2)}%';
+  }
+
+  // Fix #23: raw double.toString() on coin amounts shows floating-point
+  // artifacts like 0.10000000000000001. Format to a fixed precision and
+  // trim trailing zeros / a dangling decimal point.
+  static String formatCoinAmount(double value) {
+    final fixed = value.toStringAsFixed(8);
+    final trimmed = fixed
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
+    return trimmed.isEmpty ? '0' : trimmed;
   }
 }

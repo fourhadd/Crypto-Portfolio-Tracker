@@ -25,7 +25,9 @@ class WatchPortfolioCoinsUseCase {
         continue;
       }
 
-      final coinsResult = await coinRepository.getTopCoins(
+      final ids = holdings.map((h) => h.coinId).toSet().toList();
+      final coinsResult = await coinRepository.getCoinsByIds(
+        ids: ids,
         vsCurrency: vsCurrency,
       );
 

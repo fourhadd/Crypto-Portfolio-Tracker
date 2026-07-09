@@ -11,6 +11,8 @@ import '../cubit/portfolio_state.dart';
 class PortfolioTotalValueCard extends StatelessWidget {
   const PortfolioTotalValueCard({super.key});
 
+  static final _usdFormat = NumberFormat('#,##0.00', 'en_US');
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -26,15 +28,12 @@ class PortfolioTotalValueCard extends StatelessWidget {
         children: [
           Text('TOTAL PORTFOLIO VALUE', style: AppTextStyles.microLabel),
           SizedBox(height: 10.h),
-          BlocBuilder<PortfolioCubit, PortfolioState>(
-            buildWhen: (prev, curr) =>
-                curr is PortfolioLoaded ||
-                curr is PortfolioLoading ||
-                curr is PortfolioInitial,
-            builder: (context, state) {
-              final value = state is PortfolioLoaded ? state.totalValue : 0.0;
+          BlocSelector<PortfolioCubit, PortfolioState, double>(
+            selector: (state) =>
+                state.status == PortfolioStatus.loaded ? state.totalValue : 0.0,
+            builder: (context, totalValue) {
               return Text(
-                '\$${NumberFormat('#,##0.00', 'en_US').format(value)}',
+                '\$${_usdFormat.format(totalValue)}',
                 style: AppTextStyles.balanceLarge,
               );
             },

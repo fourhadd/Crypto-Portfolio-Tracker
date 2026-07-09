@@ -1,4 +1,5 @@
-// features/market/presentation/cubit/market_cubit.dart
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/domain/entities/coin_entity.dart';
 import '../../../../core/domain/usecases/get_top_coins_usecase.dart';
@@ -7,31 +8,41 @@ import 'market_state.dart';
 class MarketCubit extends Cubit<MarketState> {
   final GetTopCoinsUseCase getTopCoins;
 
-  String searchQuery = '';
-  List<CoinEntity> _allCoins = [];
+  Timer? _searchDebounce;
 
-  MarketCubit(this.getTopCoins) : super(const MarketInitial());
-
-  String get currentFilter =>
-      state is MarketLoaded ? (state as MarketLoaded).currentFilter : 'All';
-  double? get minPrice =>
-      state is MarketLoaded ? (state as MarketLoaded).minPrice : null;
-  double? get maxPrice =>
-      state is MarketLoaded ? (state as MarketLoaded).maxPrice : null;
+  MarketCubit(this.getTopCoins) : super(const MarketState());
+  Future<void> fetchIfNeeded({String vsCurrency = 'usd'}) async {
+    if (state.status == MarketStatus.loaded && state.allCoins.isNotEmpty) {
+      return;
+    }
+    await fetchMarkets(vsCurrency: vsCurrency);
+  }
 
   Future<void> fetchMarkets({String vsCurrency = 'usd'}) async {
-    emit(const MarketLoading());
+    emit(state.copyWith(status: MarketStatus.loading));
 
     final result = await getTopCoins(
       vsCurrency: vsCurrency,
       page: 1,
       perPage: 100,
     );
+    if (isClosed) return;
 
-    result.fold((failure) => emit(MarketError(failure.message)), (coins) {
-      _allCoins = coins;
-      emit(MarketLoaded(_getFilteredCoins()));
-    });
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          status: MarketStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (coins) => emit(
+        state.copyWith(
+          status: MarketStatus.loaded,
+          allCoins: coins,
+          coins: _filteredCoins(all: coins),
+        ),
+      ),
+    );
   }
 
   Future<void> refreshMarkets({String vsCurrency = 'usd'}) async {
@@ -40,70 +51,58 @@ class MarketCubit extends Cubit<MarketState> {
       page: 1,
       perPage: 100,
     );
+    if (isClosed) return;
 
-    result.fold((failure) => emit(MarketError(failure.message)), (coins) {
-      _allCoins = coins;
-
-      final prevFilter = currentFilter;
-      final prevMin = minPrice;
-      final prevMax = maxPrice;
-
-      emit(
-        MarketLoaded(
-          _getFilteredCoins(filter: prevFilter, min: prevMin, max: prevMax),
-          currentFilter: prevFilter,
-          minPrice: prevMin,
-          maxPrice: prevMax,
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          status: MarketStatus.error,
+          errorMessage: failure.message,
         ),
-      );
-    });
-  }
-
-  void updateSearchQuery(String query) {
-    searchQuery = query;
-    if (state is MarketLoaded) {
-      final s = state as MarketLoaded;
-      emit(
-        s.copyWith(
-          coins: _getFilteredCoins(
-            filter: s.currentFilter,
-            min: s.minPrice,
-            max: s.maxPrice,
-          ),
-        ),
-      );
-    }
-  }
-
-  void changeFilter(String newFilter) {
-    if (state is! MarketLoaded) return;
-    final s = state as MarketLoaded;
-    if (s.currentFilter == newFilter) return;
-
-    emit(
-      s.copyWith(
-        currentFilter: newFilter,
-        coins: _getFilteredCoins(
-          filter: newFilter,
-          min: s.minPrice,
-          max: s.maxPrice,
+      ),
+      (coins) => emit(
+        state.copyWith(
+          status: MarketStatus.loaded,
+          allCoins: coins,
+          coins: _filteredCoins(all: coins),
         ),
       ),
     );
   }
 
-  void applyAdvancedFilters({double? minPrice, double? maxPrice}) {
-    if (state is! MarketLoaded) return;
-    final s = state as MarketLoaded;
+  void updateSearchQuery(String query) {
+    emit(state.copyWith(searchQuery: query));
 
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          coins: _filteredCoins(all: state.allCoins, query: query),
+        ),
+      );
+    });
+  }
+
+  void changeFilter(String newFilter) {
+    if (state.currentFilter == newFilter) return;
     emit(
-      s.copyWith(
+      state.copyWith(
+        currentFilter: newFilter,
+        coins: _filteredCoins(all: state.allCoins, filter: newFilter),
+      ),
+    );
+  }
+
+  void applyAdvancedFilters({double? minPrice, double? maxPrice}) {
+    emit(
+      state.copyWith(
         minPrice: minPrice,
         maxPrice: maxPrice,
         clearMinPrice: minPrice == null,
         clearMaxPrice: maxPrice == null,
-        coins: _getFilteredCoins(
-          filter: s.currentFilter,
+        coins: _filteredCoins(
+          all: state.allCoins,
           min: minPrice,
           max: maxPrice,
         ),
@@ -112,38 +111,36 @@ class MarketCubit extends Cubit<MarketState> {
   }
 
   void resetFilters() {
-    if (state is! MarketLoaded) return;
-    final s = state as MarketLoaded;
-
     emit(
-      s.copyWith(
+      state.copyWith(
         clearMinPrice: true,
         clearMaxPrice: true,
-        coins: _getFilteredCoins(filter: s.currentFilter, min: null, max: null),
+        coins: _filteredCoins(all: state.allCoins, min: null, max: null),
       ),
     );
   }
 
-  bool get hasActiveFilters => minPrice != null || maxPrice != null;
-
-  List<CoinEntity> _getFilteredCoins({
+  List<CoinEntity> _filteredCoins({
+    required List<CoinEntity> all,
+    String? query,
     String? filter,
     double? min,
     double? max,
   }) {
-    final activeFilter = filter ?? currentFilter;
-    final activeMin = min ?? this.minPrice;
-    final activeMax = max ?? this.maxPrice;
+    final activeQuery = query ?? state.searchQuery;
+    final activeFilter = filter ?? state.currentFilter;
+    final activeMin = min ?? state.minPrice;
+    final activeMax = max ?? state.maxPrice;
 
-    List<CoinEntity> list = List.from(_allCoins);
+    List<CoinEntity> list = List.from(all);
 
-    if (searchQuery.trim().isNotEmpty) {
-      final query = searchQuery.trim().toLowerCase();
+    if (activeQuery.trim().isNotEmpty) {
+      final q = activeQuery.trim().toLowerCase();
       list = list
           .where(
             (coin) =>
-                coin.name.toLowerCase().contains(query) ||
-                coin.symbol.toLowerCase().contains(query),
+                coin.name.toLowerCase().contains(q) ||
+                coin.symbol.toLowerCase().contains(q),
           )
           .toList();
     }
@@ -177,5 +174,11 @@ class MarketCubit extends Cubit<MarketState> {
     }
 
     return list;
+  }
+
+  @override
+  Future<void> close() {
+    _searchDebounce?.cancel();
+    return super.close();
   }
 }

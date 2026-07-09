@@ -4,8 +4,8 @@ import 'package:crypto_portfolio_tracker/features/portfolio/domain/entities/port
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
+import 'package:crypto_portfolio_tracker/core/utils/number_formatter.dart';
 import 'composition_palette.dart';
 
 class CompositionDonutChart extends StatelessWidget {
@@ -29,7 +29,7 @@ class CompositionDonutChart extends StatelessWidget {
     final total = items.fold<double>(0, (sum, item) => sum + _weightOf(item));
 
     final centerLabel = mode == CompositionMode.byValue
-        ? '\$${NumberFormat('#,##0.00', 'en_US').format(total)}'
+        ? '\$${NumberFormatter.usdFormat.format(total)}'
         : '${items.length} coin${items.length == 1 ? '' : 's'}';
 
     return SizedBox(

@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
+import 'package:crypto_portfolio_tracker/core/utils/number_formatter.dart';
 
 import '../cubit/add_holding_cubit.dart';
 import '../cubit/add_holding_state.dart';
@@ -18,10 +18,9 @@ class UseCurrentPriceHint extends StatelessWidget {
       builder: (context, state) {
         if (state.coin == null) return const SizedBox.shrink();
 
-        final priceText = NumberFormat(
-          '#,##0.00',
-          'en_US',
-        ).format(state.coin!.currentPrice);
+        final priceText = NumberFormatter.usdFormat.format(
+          state.coin!.currentPrice,
+        );
 
         return Padding(
           padding: EdgeInsets.only(top: 8.h),

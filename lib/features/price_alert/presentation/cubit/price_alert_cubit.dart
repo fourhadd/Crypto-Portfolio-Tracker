@@ -1,4 +1,13 @@
 // features/alerts/presentation/cubit/price_alerts_cubit.dart
+//
+// KNOWN LIMITATION (finding #18, Phase 6):
+// This cubit only persists/loads/toggles alert *records* — it does not
+// poll prices or fire notifications. `SettingsCubit.notificationsEnabled`
+// currently has no effect because nothing here subscribes to it.
+// A real fix needs a Timer.periodic (or push-based) price check against
+// `/simple/price` for each alert's symbol, comparing against
+// `targetPrice`/`condition`, and a local-notification trigger on cross.
+// Deliberately left out of this pass; tracked as a follow-up.
 import 'dart:convert';
 
 import 'package:crypto_portfolio_tracker/features/price_alert/domain/entities/alert_entity.dart';

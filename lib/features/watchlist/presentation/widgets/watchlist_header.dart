@@ -21,10 +21,11 @@ class WatchlistHeader extends StatelessWidget {
           children: [
             Text('Watchlist', style: AppTextStyles.displayLarge),
             SizedBox(height: 4.h),
-            BlocBuilder<WatchlistCubit, WatchlistState>(
-              buildWhen: (previous, current) => current is WatchlistLoaded,
-              builder: (context, state) {
-                final count = state is WatchlistLoaded ? state.coins.length : 0;
+            BlocSelector<WatchlistCubit, WatchlistState, int>(
+              selector: (state) => state.status == WatchlistStatus.loaded
+                  ? state.coins.length
+                  : 0,
+              builder: (context, count) {
                 return Text(
                   '$count coin${count == 1 ? '' : 's'} tracked',
                   style: AppTextStyles.bodyMedium.copyWith(

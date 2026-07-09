@@ -14,7 +14,7 @@ class AddHoldingUseCase {
     required DateTime buyDate,
   }) {
     final holding = HoldingEntity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
       coinId: coinId,
       amount: amount,
       buyPrice: buyPrice,

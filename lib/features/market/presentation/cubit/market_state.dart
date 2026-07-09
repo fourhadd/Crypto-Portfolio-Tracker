@@ -1,60 +1,65 @@
-// features/market/presentation/cubit/market_state.dart
 import 'package:equatable/equatable.dart';
 import '../../../../core/domain/entities/coin_entity.dart';
 
-abstract class MarketState extends Equatable {
-  const MarketState();
+enum MarketStatus { initial, loading, loaded, error }
 
-  @override
-  List<Object?> get props => [];
-}
-
-class MarketInitial extends MarketState {
-  const MarketInitial();
-}
-
-class MarketLoading extends MarketState {
-  const MarketLoading();
-}
-
-class MarketLoaded extends MarketState {
+class MarketState extends Equatable {
+  final MarketStatus status;
   final List<CoinEntity> coins;
+  final List<CoinEntity> allCoins;
+  final String searchQuery;
   final String currentFilter;
   final double? minPrice;
   final double? maxPrice;
+  final String? errorMessage;
 
-  const MarketLoaded(
-    this.coins, {
+  const MarketState({
+    this.status = MarketStatus.initial,
+    this.coins = const [],
+    this.allCoins = const [],
+    this.searchQuery = '',
     this.currentFilter = 'All',
     this.minPrice,
     this.maxPrice,
+    this.errorMessage,
   });
 
-  MarketLoaded copyWith({
+  bool get isLoading => status == MarketStatus.loading;
+  bool get hasActiveFilters => minPrice != null || maxPrice != null;
+
+  MarketState copyWith({
+    MarketStatus? status,
     List<CoinEntity>? coins,
+    List<CoinEntity>? allCoins,
+    String? searchQuery,
     String? currentFilter,
     double? minPrice,
     double? maxPrice,
     bool clearMinPrice = false,
     bool clearMaxPrice = false,
+    String? errorMessage,
   }) {
-    return MarketLoaded(
-      coins ?? this.coins,
+    return MarketState(
+      status: status ?? this.status,
+      coins: coins ?? this.coins,
+      allCoins: allCoins ?? this.allCoins,
+      searchQuery: searchQuery ?? this.searchQuery,
       currentFilter: currentFilter ?? this.currentFilter,
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
       maxPrice: clearMaxPrice ? null : (maxPrice ?? this.maxPrice),
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [coins, currentFilter, minPrice, maxPrice];
-}
-
-class MarketError extends MarketState {
-  final String message;
-
-  const MarketError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [
+    status,
+    coins,
+    allCoins,
+    searchQuery,
+    currentFilter,
+    minPrice,
+    maxPrice,
+    errorMessage,
+  ];
 }

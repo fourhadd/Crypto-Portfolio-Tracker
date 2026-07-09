@@ -1,4 +1,3 @@
-// features/portfolio/presentation/cubit/sell_holding_state.dart
 import 'package:equatable/equatable.dart';
 
 enum SellHoldingStatus { initial, submitting, success, failure }
@@ -20,11 +19,13 @@ class SellHoldingState extends Equatable {
     double? sellAmount,
     SellHoldingStatus? status,
     String? errorMessage,
+    bool clearError = false,
   }) {
     return SellHoldingState(
       sellAmount: sellAmount ?? this.sellAmount,
       status: status ?? this.status,
-      errorMessage: errorMessage,
+
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 

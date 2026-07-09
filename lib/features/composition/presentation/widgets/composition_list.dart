@@ -1,9 +1,10 @@
 // features/composition/presentation/widgets/composition_list.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:crypto_portfolio_tracker/features/composition/presentation/cubit/composition_state.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/entities/portfolio_coin_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
+import 'package:crypto_portfolio_tracker/core/utils/number_formatter.dart';
 import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
 import 'composition_palette.dart';
 
@@ -37,8 +38,8 @@ class CompositionList extends StatelessWidget {
           final color = compositionPaletteColor(index);
 
           final valueLabel = mode == CompositionMode.byValue
-              ? '\$${NumberFormat('#,##0.00', 'en_US').format(weight)}'
-              : NumberFormat('#,##0.0000').format(weight);
+              ? '\$${NumberFormatter.usdFormat.format(weight)}'
+              : NumberFormatter.fourDecimalFormat.format(weight);
 
           return Container(
             padding: EdgeInsets.all(16.w),
@@ -64,11 +65,12 @@ class CompositionList extends StatelessWidget {
                 ),
                 SizedBox(width: 10.w),
                 ClipOval(
-                  child: Image.network(
-                    item.coin.image,
+                  child: CachedNetworkImage(
+                    imageUrl: item.coin.image,
                     width: 28.w,
                     height: 28.w,
-                    errorBuilder: (_, __, ___) => Icon(
+                    placeholder: (_, __) => SizedBox(width: 28.w, height: 28.w),
+                    errorWidget: (_, __, ___) => Icon(
                       Icons.currency_bitcoin,
                       size: 28.w,
                       color: AppColors.textSecondary,

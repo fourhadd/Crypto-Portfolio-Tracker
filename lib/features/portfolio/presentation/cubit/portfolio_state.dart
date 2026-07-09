@@ -1,29 +1,22 @@
-// features/portfolio/presentation/cubit/portfolio_state.dart
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/portfolio_coin_entity.dart';
 
-abstract class PortfolioState extends Equatable {
-  const PortfolioState();
+enum PortfolioStatus { initial, loading, loaded, error }
 
-  @override
-  List<Object?> get props => [];
-}
-
-class PortfolioInitial extends PortfolioState {
-  const PortfolioInitial();
-}
-
-class PortfolioLoading extends PortfolioState {
-  const PortfolioLoading();
-}
-
-class PortfolioLoaded extends PortfolioState {
+class PortfolioState extends Equatable {
+  final PortfolioStatus status;
   final List<PortfolioCoinEntity> items;
+  final String? errorMessage;
 
-  const PortfolioLoaded(this.items);
+  const PortfolioState({
+    this.status = PortfolioStatus.initial,
+    this.items = const [],
+    this.errorMessage,
+  });
 
   bool get isEmpty => items.isEmpty;
+  bool get isLoading => status == PortfolioStatus.loading;
 
   double get totalValue =>
       items.fold(0.0, (sum, item) => sum + item.currentValue);
@@ -36,15 +29,31 @@ class PortfolioLoaded extends PortfolioState {
   double get totalProfitLossPercent =>
       totalInvested == 0 ? 0 : (totalProfitLoss / totalInvested) * 100;
 
+  double get todayChangeAmount => items.fold(
+    0.0,
+    (sum, item) =>
+        sum + item.currentValue * (item.coin.priceChangePercentage24h / 100),
+  );
+
+  double get todayChangePercent {
+    final yesterdayValue = totalValue - todayChangeAmount;
+    return yesterdayValue == 0
+        ? 0.0
+        : (todayChangeAmount / yesterdayValue) * 100;
+  }
+
+  PortfolioState copyWith({
+    PortfolioStatus? status,
+    List<PortfolioCoinEntity>? items,
+    String? errorMessage,
+  }) {
+    return PortfolioState(
+      status: status ?? this.status,
+      items: items ?? this.items,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+
   @override
-  List<Object?> get props => [items];
-}
-
-class PortfolioError extends PortfolioState {
-  final String message;
-
-  const PortfolioError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [status, items, errorMessage];
 }

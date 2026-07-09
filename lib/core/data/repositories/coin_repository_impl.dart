@@ -1,6 +1,7 @@
 // core/data/repositories/coin_repository_impl.dart
 import 'package:dartz/dartz.dart';
 
+import '../../errors/exceptions.dart';
 import '../../errors/failures.dart';
 import '../../domain/entities/coin_entity.dart';
 import '../../domain/repositories/coin_repository.dart';
@@ -25,7 +26,7 @@ class CoinRepositoryImpl implements CoinRepository {
       );
       return Right(coins);
     } catch (e) {
-      return const Left(ServerFailure());
+      return Left(_mapToFailure(e));
     }
   }
 
@@ -43,7 +44,18 @@ class CoinRepositoryImpl implements CoinRepository {
       );
       return Right(coins);
     } catch (e) {
-      return const Left(ServerFailure());
+      return Left(_mapToFailure(e));
     }
+  }
+
+  // Fix #28: DioClient's error interceptor already classifies failures
+  // into NetworkException / TimeoutException / ServerException — this
+  // used to be discarded and collapsed into a single ServerFailure,
+  // so the UI could never distinguish "no internet" from "server error".
+  Failure _mapToFailure(Object e) {
+    if (e is NetworkException) return NetworkFailure(e.message);
+    if (e is TimeoutException) return TimeoutFailure(e.message);
+    if (e is ServerException) return ServerFailure(e.message);
+    return UnknownFailure(e.toString());
   }
 }

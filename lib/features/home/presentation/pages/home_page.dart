@@ -23,7 +23,7 @@ class HomePage extends StatelessWidget {
   void _handleWithdraw(BuildContext context) {
     final state = context.read<PortfolioCubit>().state;
 
-    if (state is! PortfolioLoaded || state.isEmpty) {
+    if (state.status != PortfolioStatus.loaded || state.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Withdraw etmək üçün əvvəlcə holding əlavə edin'),
@@ -78,30 +78,23 @@ class HomePage extends StatelessWidget {
                     onSettingsTap: () => context.push('/settings'),
                   ),
                   SizedBox(height: 24.h),
-                  BlocBuilder<PortfolioCubit, PortfolioState>(
-                    builder: (context, state) {
-                      double totalBalance = 0;
-                      double todayChangeAmount = 0;
 
-                      if (state is PortfolioLoaded) {
-                        for (final item in state.items) {
-                          totalBalance += item.currentValue;
-                          final changeAmount =
-                              item.currentValue *
-                              (item.coin.priceChangePercentage24h / 100);
-                          todayChangeAmount += changeAmount;
-                        }
-                      }
-
-                      final yesterdayValue = totalBalance - todayChangeAmount;
-                      final todayChangePercent = yesterdayValue == 0
-                          ? 0.0
-                          : (todayChangeAmount / yesterdayValue) * 100;
-
+                  BlocSelector<
+                    PortfolioCubit,
+                    PortfolioState,
+                    (double, double, double)
+                  >(
+                    selector: (state) => (
+                      state.totalValue,
+                      state.todayChangeAmount,
+                      state.todayChangePercent,
+                    ),
+                    builder: (context, values) {
+                      final (total, changeAmount, changePercent) = values;
                       return BalanceCard(
-                        totalBalance: totalBalance,
-                        todayChangeAmount: todayChangeAmount,
-                        todayChangePercent: todayChangePercent,
+                        totalBalance: total,
+                        todayChangeAmount: changeAmount,
+                        todayChangePercent: changePercent,
                         onDeposit: () => _handleDeposit(context),
                         onWithdraw: () => _handleWithdraw(context),
                       );
