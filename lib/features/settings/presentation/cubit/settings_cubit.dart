@@ -1,5 +1,6 @@
 // features/settings/presentation/cubit/settings_cubit.dart
 import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
+import 'package:crypto_portfolio_tracker/core/sevices/refresh_interval_notifier_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/sevices/storage_service.dart';
@@ -8,9 +9,13 @@ import 'settings_state.dart';
 class SettingsCubit extends Cubit<SettingsState> {
   final StorageService storageService;
   final CurrencyNotifierService currencyNotifier;
+  final RefreshIntervalNotifierService refreshIntervalNotifier;
 
-  SettingsCubit({required this.storageService, required this.currencyNotifier})
-    : super(SettingsState.initial()) {
+  SettingsCubit({
+    required this.storageService,
+    required this.currencyNotifier,
+    required this.refreshIntervalNotifier,
+  }) : super(SettingsState.initial()) {
     _loadSettings();
   }
 
@@ -55,6 +60,8 @@ class SettingsCubit extends Cubit<SettingsState> {
         isRefreshPickerOpen: false,
       ),
     );
+
+    refreshIntervalNotifier.notify(seconds);
   }
 
   void toggleNotifications(bool enabled) {

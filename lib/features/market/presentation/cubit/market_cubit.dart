@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
+import 'package:crypto_portfolio_tracker/core/sevices/refresh_interval_notifier_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -14,15 +15,44 @@ class MarketCubit extends Cubit<MarketState> {
   final StorageService storageService;
 
   Timer? _searchDebounce;
+  Timer? _autoRefreshTimer;
   late final StreamSubscription<String> _currencySubscription;
+  late final StreamSubscription<int> _refreshIntervalSubscription;
 
   MarketCubit(
     this.getTopCoins,
     this.storageService,
     CurrencyNotifierService currencyNotifier,
+    RefreshIntervalNotifierService refreshIntervalNotifier,
   ) : super(const MarketState()) {
     _currencySubscription = currencyNotifier.stream.listen((currency) {
       refreshMarkets(vsCurrency: currency);
+    });
+
+    _refreshIntervalSubscription = refreshIntervalNotifier.stream.listen((
+      seconds,
+    ) {
+      _startAutoRefresh(seconds);
+    });
+
+    _startAutoRefresh(_currentRefreshIntervalSeconds());
+  }
+
+  int _currentRefreshIntervalSeconds() {
+    return storageService.readValue<int>(
+          AppConstants.storageKeyRefreshInterval,
+        ) ??
+        30;
+  }
+
+  void _startAutoRefresh(int seconds) {
+    _autoRefreshTimer?.cancel();
+    if (seconds <= 0) return;
+
+    _autoRefreshTimer = Timer.periodic(Duration(seconds: seconds), (_) {
+      // refreshMarkets already avoids flipping status to loading, so
+      // this won't flash a skeleton over data the user is browsing.
+      refreshMarkets();
     });
   }
 
@@ -212,7 +242,9 @@ class MarketCubit extends Cubit<MarketState> {
   @override
   Future<void> close() async {
     _searchDebounce?.cancel();
+    _autoRefreshTimer?.cancel();
     await _currencySubscription.cancel();
+    await _refreshIntervalSubscription.cancel();
     return super.close();
   }
 }

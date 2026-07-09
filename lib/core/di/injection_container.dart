@@ -1,5 +1,8 @@
 // core/di/injection_container.dart
 import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
+import 'package:crypto_portfolio_tracker/core/sevices/refresh_interval_notifier_service.dart';
+import 'package:crypto_portfolio_tracker/core/sevices/notification_service.dart';
+import 'package:crypto_portfolio_tracker/features/price_alert/presentation/cubit/price_alert_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/composition/presentation/cubit/composition_mode_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/data/datasources/portfolio_local_datasource.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/data/repositories/portfolio_repository_impl.dart';
@@ -51,6 +54,10 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<CurrencyNotifierService>(
     () => CurrencyNotifierService(),
   );
+  sl.registerLazySingleton<RefreshIntervalNotifierService>(
+    () => RefreshIntervalNotifierService(),
+  );
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
 
   // ===== Market feature =====
   sl.registerLazySingleton<CoinRemoteDataSource>(
@@ -188,6 +195,7 @@ Future<void> initDependencies() async {
       sl<GetTopCoinsUseCase>(),
       sl<StorageService>(),
       sl<CurrencyNotifierService>(),
+      sl<RefreshIntervalNotifierService>(),
     ),
   );
   sl.registerLazySingleton<MarketCubit>(
@@ -195,6 +203,7 @@ Future<void> initDependencies() async {
       sl<GetTopCoinsUseCase>(),
       sl<StorageService>(),
       sl<CurrencyNotifierService>(),
+      sl<RefreshIntervalNotifierService>(),
     ),
   );
 
@@ -210,6 +219,19 @@ Future<void> initDependencies() async {
 
   sl.registerFactory<CompareCubit>(() => CompareCubit(getCompareChart: sl()));
   sl.registerFactory(
-    () => SettingsCubit(storageService: sl(), currencyNotifier: sl()),
+    () => SettingsCubit(
+      storageService: sl(),
+      currencyNotifier: sl(),
+      refreshIntervalNotifier: sl(),
+    ),
+  );
+
+  // ===== Price Alerts feature =====
+  sl.registerLazySingleton<PriceAlertsCubit>(
+    () => PriceAlertsCubit(
+      storageService: sl(),
+      getTopCoinsUseCase: sl(),
+      notificationService: sl(),
+    ),
   );
 }

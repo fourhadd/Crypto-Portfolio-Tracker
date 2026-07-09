@@ -134,8 +134,13 @@ class AppRouter {
       ),
       GoRoute(
         path: '/price-alerts',
-        builder: (context, state) => BlocProvider(
-          create: (_) => PriceAlertsCubit(storageService: sl<StorageService>()),
+        builder: (context, state) => MultiBlocProvider(
+          providers: [
+            BlocProvider<PriceAlertsCubit>.value(value: sl<PriceAlertsCubit>()),
+            BlocProvider<MarketCubit>.value(
+              value: sl<MarketCubit>()..fetchIfNeeded(),
+            ),
+          ],
           child: const PriceAlertsSheetListener(child: PriceAlertsPage()),
         ),
       ),

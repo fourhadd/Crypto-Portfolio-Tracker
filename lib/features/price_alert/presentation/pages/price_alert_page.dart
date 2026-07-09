@@ -4,6 +4,7 @@ import 'package:crypto_portfolio_tracker/features/price_alert/presentation/cubit
 import 'package:crypto_portfolio_tracker/features/price_alert/presentation/widgets/create_alert_button.dart';
 import 'package:crypto_portfolio_tracker/features/price_alert/presentation/widgets/create_alert_sheet.dart';
 import 'package:crypto_portfolio_tracker/features/price_alert/presentation/widgets/price_alerts_list.dart';
+import 'package:crypto_portfolio_tracker/features/market/presentation/cubit/market_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -60,8 +61,11 @@ class PriceAlertsSheetListener extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
             ),
-            builder: (_) => BlocProvider.value(
-              value: context.read<PriceAlertsCubit>(),
+            builder: (_) => MultiBlocProvider(
+              providers: [
+                BlocProvider.value(value: context.read<PriceAlertsCubit>()),
+                BlocProvider.value(value: context.read<MarketCubit>()),
+              ],
               child: const CreateAlertSheet(),
             ),
           ).whenComplete(

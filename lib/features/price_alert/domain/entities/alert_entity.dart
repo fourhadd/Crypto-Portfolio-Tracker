@@ -9,20 +9,36 @@ class PriceAlert {
   final AlertCondition condition;
   final bool isActive;
 
+  /// Last price seen for this alert while it was active. Used to detect
+  /// an actual *crossing* of [targetPrice] rather than firing just
+  /// because the current price already happens to satisfy the
+  /// condition (e.g. right after toggling an old alert back on).
+  /// Null means "just armed" - the next check only records a baseline,
+  /// it never fires on that first check.
+  final double? lastKnownPrice;
+
   const PriceAlert({
     required this.id,
     required this.symbol,
     required this.targetPrice,
     required this.condition,
     this.isActive = true,
+    this.lastKnownPrice,
   });
 
-  PriceAlert copyWith({bool? isActive}) => PriceAlert(
+  PriceAlert copyWith({
+    bool? isActive,
+    double? lastKnownPrice,
+    bool clearLastKnownPrice = false,
+  }) => PriceAlert(
     id: id,
     symbol: symbol,
     targetPrice: targetPrice,
     condition: condition,
     isActive: isActive ?? this.isActive,
+    lastKnownPrice: clearLastKnownPrice
+        ? null
+        : (lastKnownPrice ?? this.lastKnownPrice),
   );
 
   Map<String, dynamic> toJson() => {
@@ -31,6 +47,7 @@ class PriceAlert {
     'targetPrice': targetPrice,
     'condition': condition.name,
     'isActive': isActive,
+    'lastKnownPrice': lastKnownPrice,
   };
 
   factory PriceAlert.fromJson(Map<String, dynamic> json) => PriceAlert(
@@ -42,5 +59,6 @@ class PriceAlert {
       orElse: () => AlertCondition.above,
     ),
     isActive: json['isActive'] as bool? ?? true,
+    lastKnownPrice: (json['lastKnownPrice'] as num?)?.toDouble(),
   );
 }
