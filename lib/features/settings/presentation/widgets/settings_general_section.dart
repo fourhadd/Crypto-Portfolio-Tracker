@@ -61,12 +61,16 @@ class SettingsGeneralSection extends StatelessWidget {
               onTap: cubit.toggleCurrencyPicker,
             ),
             if (state.isCurrencyPickerOpen)
-              for (final option in kCurrencyOptions)
-                SettingsOptionTile(
-                  label: option,
-                  selected: option == state.currency,
-                  onTap: () => cubit.setCurrency(option),
-                ),
+              Column(
+                children: [
+                  for (final option in kCurrencyOptions)
+                    SettingsOptionTile(
+                      label: option,
+                      selected: option == state.currency,
+                      onTap: () => cubit.setCurrency(option),
+                    ),
+                ],
+              ),
             SettingsTile(
               icon: Icons.refresh,
               title: 'Refresh Interval',
@@ -77,12 +81,16 @@ class SettingsGeneralSection extends StatelessWidget {
               onTap: cubit.toggleRefreshPicker,
             ),
             if (state.isRefreshPickerOpen)
-              for (final entry in kRefreshIntervalOptions.entries)
-                SettingsOptionTile(
-                  label: entry.key,
-                  selected: entry.value == state.refreshIntervalSeconds,
-                  onTap: () => cubit.setRefreshInterval(entry.value),
-                ),
+              Column(
+                children: [
+                  for (final entry in kRefreshIntervalOptions.entries)
+                    SettingsOptionTile(
+                      label: entry.key,
+                      selected: entry.value == state.refreshIntervalSeconds,
+                      onTap: () => cubit.setRefreshInterval(entry.value),
+                    ),
+                ],
+              ),
           ],
         );
       },

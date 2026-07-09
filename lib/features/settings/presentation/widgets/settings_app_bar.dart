@@ -17,6 +17,8 @@ class SettingsAppBar extends StatelessWidget {
         InkWell(
           onTap: () => context.pop(),
           borderRadius: BorderRadius.circular(20.r),
+          splashColor: AppColors.accentAmber.withValues(alpha: 0.08),
+          highlightColor: AppColors.accentAmber.withValues(alpha: 0.05),
           child: Container(
             width: 40.w,
             height: 40.w,

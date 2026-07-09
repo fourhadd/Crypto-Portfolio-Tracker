@@ -29,6 +29,7 @@ class SettingsSection extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         Container(
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: AppColors.bgElevated,
             borderRadius: BorderRadius.circular(AppRadius.chip),

@@ -21,12 +21,19 @@ class SettingsOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
       child: Container(
         width: double.infinity,
         color: selected
             ? AppColors.accentAmber.withValues(alpha: 0.12)
             : Colors.transparent,
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+        padding: EdgeInsets.only(
+          left: 62.w,
+          right: 14.w,
+          top: 14.h,
+          bottom: 14.h,
+        ),
         child: Row(
           children: [
             Expanded(
@@ -35,7 +42,7 @@ class SettingsOptionTile extends StatelessWidget {
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: selected
                       ? AppColors.accentAmber
-                      : AppColors.textPrimary,
+                      : AppColors.textSecondary,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),

@@ -1,5 +1,6 @@
 // features/home/presentation/pages/home_page.dart
 import 'package:crypto_portfolio_tracker/features/home/presentation/widgets/home_list_header.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/presentation/widgets/select_holding_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,6 +15,37 @@ import '../widgets/home_app_bar.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  void _handleDeposit(BuildContext context) {
+    context.push('/portfolio/add');
+  }
+
+  void _handleWithdraw(BuildContext context) {
+    final state = context.read<PortfolioCubit>().state;
+
+    if (state is! PortfolioLoaded || state.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Withdraw etmək üçün əvvəlcə holding əlavə edin'),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      builder: (sheetContext) => SelectHoldingSheet(
+        items: state.items,
+        onSelect: (item) {
+          Navigator.of(sheetContext).pop();
+          context.push('/portfolio/sell/${item.coin.id}');
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +102,8 @@ class HomePage extends StatelessWidget {
                         totalBalance: totalBalance,
                         todayChangeAmount: todayChangeAmount,
                         todayChangePercent: todayChangePercent,
-                        onDeposit: () {},
-                        onWithdraw: () {},
+                        onDeposit: () => _handleDeposit(context),
+                        onWithdraw: () => _handleWithdraw(context),
                       );
                     },
                   ),

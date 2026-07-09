@@ -47,63 +47,87 @@ class _CreateAlertSheetState extends State<CreateAlertSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20.w,
-        right: 20.w,
-        top: 20.h,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.bgSurfaceSolid,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.sheet),
+        ),
+        border: Border(
+          top: BorderSide(color: AppColors.bgElevatedBorder, width: 1),
+        ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Create Alert', style: AppTextStyles.headingMedium),
-          SizedBox(height: 16.h),
-          TextField(
-            controller: _symbolController,
-            textCapitalization: TextCapitalization.characters,
-            style: TextStyle(color: AppColors.textPrimary),
-            decoration: _inputDecoration('Coin symbol (e.g. BTC)'),
-          ),
-          SizedBox(height: 12.h),
-          TextField(
-            controller: _priceController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: TextStyle(color: AppColors.textPrimary),
-            decoration: _inputDecoration('Target price'),
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: AlertConditionChip(
-                  label: 'Above',
-                  selected: _condition == AlertCondition.above,
-                  onTap: () =>
-                      setState(() => _condition = AlertCondition.above),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20.w,
+          right: 20.w,
+          top: 20.h,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36.w,
+                height: 4.h,
+                margin: EdgeInsets.only(bottom: 16.h),
+                decoration: BoxDecoration(
+                  color: AppColors.bgElevatedBorder,
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: AlertConditionChip(
-                  label: 'Below',
-                  selected: _condition == AlertCondition.below,
-                  onTap: () =>
-                      setState(() => _condition = AlertCondition.below),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submit,
-              child: const Text('Create Alert'),
             ),
-          ),
-        ],
+            Text('Create Alert', style: AppTextStyles.headingMedium),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: _symbolController,
+              textCapitalization: TextCapitalization.characters,
+              style: TextStyle(color: AppColors.textPrimary),
+              decoration: _inputDecoration('Coin symbol (e.g. BTC)'),
+            ),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: _priceController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              style: TextStyle(color: AppColors.textPrimary),
+              decoration: _inputDecoration('Target price'),
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Expanded(
+                  child: AlertConditionChip(
+                    label: 'Above',
+                    selected: _condition == AlertCondition.above,
+                    onTap: () =>
+                        setState(() => _condition = AlertCondition.above),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: AlertConditionChip(
+                    label: 'Below',
+                    selected: _condition == AlertCondition.below,
+                    onTap: () =>
+                        setState(() => _condition = AlertCondition.below),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submit,
+                child: const Text('Create Alert'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

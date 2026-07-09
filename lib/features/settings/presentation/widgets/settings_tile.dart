@@ -30,6 +30,8 @@ class SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: isLoading ? null : onTap,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         child: Row(
@@ -41,6 +43,10 @@ class SettingsTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.accentAmber.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(
+                  color: AppColors.accentAmber.withValues(alpha: 0.3),
+                  width: 1,
+                ),
               ),
               child: Icon(icon, size: 18.sp, color: AppColors.accentAmber),
             ),
