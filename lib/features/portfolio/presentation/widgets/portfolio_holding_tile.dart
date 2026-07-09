@@ -1,6 +1,7 @@
 // features/portfolio/presentation/widgets/portfolio_holding_tile.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
 
@@ -15,55 +16,62 @@ class PortfolioHoldingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final changeColor = AppColors.changeColor(item.profitLossPercent);
 
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: AppColors.bgElevated,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.chip),
-        border: Border.all(color: AppColors.bgElevatedBorder, width: 1),
-      ),
-      child: Row(
-        children: [
-          ClipOval(
-            child: Image.network(
-              item.coin.image,
-              width: 36.w,
-              height: 36.w,
-              errorBuilder: (_, __, ___) => Icon(
-                Icons.currency_bitcoin,
-                size: 36.w,
-                color: AppColors.textSecondary,
-              ),
-            ),
+        onTap: () => context.push('/coin/${item.holding.coinId}'),
+        child: Container(
+          padding: EdgeInsets.all(14.w),
+          decoration: BoxDecoration(
+            color: AppColors.bgElevated,
+            borderRadius: BorderRadius.circular(AppRadius.chip),
+            border: Border.all(color: AppColors.bgElevatedBorder, width: 1),
           ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.coin.name, style: AppTextStyles.bodyMedium),
-                Text(
-                  '${item.holding.amount} ${item.coin.symbol.toUpperCase()}',
-                  style: AppTextStyles.bodySmall,
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Row(
             children: [
-              Text(
-                '\$${NumberFormat('#,##0.00').format(item.currentValue)}',
-                style: AppTextStyles.bodyMedium,
+              ClipOval(
+                child: Image.network(
+                  item.coin.image,
+                  width: 36.w,
+                  height: 36.w,
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.currency_bitcoin,
+                    size: 36.w,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ),
-              Text(
-                '${item.profitLossPercent >= 0 ? '+' : ''}'
-                '${item.profitLossPercent.toStringAsFixed(2)}%',
-                style: AppTextStyles.bodySmall.copyWith(color: changeColor),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.coin.name, style: AppTextStyles.bodyMedium),
+                    Text(
+                      '${item.holding.amount} ${item.coin.symbol.toUpperCase()}',
+                      style: AppTextStyles.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '\$${NumberFormat('#,##0.00').format(item.currentValue)}',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                  Text(
+                    '${item.profitLossPercent >= 0 ? '+' : ''}'
+                    '${item.profitLossPercent.toStringAsFixed(2)}%',
+                    style: AppTextStyles.bodySmall.copyWith(color: changeColor),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

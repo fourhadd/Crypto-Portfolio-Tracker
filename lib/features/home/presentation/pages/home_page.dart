@@ -43,7 +43,7 @@ class HomePage extends StatelessWidget {
                   HomeAppBar(
                     userName: 'Crypto Trader',
                     onStatsTap: () => context.push('/compare'),
-                    onSettingsTap: () {},
+                    onSettingsTap: () => context.push('/settings'),
                   ),
                   SizedBox(height: 24.h),
                   BlocBuilder<PortfolioCubit, PortfolioState>(

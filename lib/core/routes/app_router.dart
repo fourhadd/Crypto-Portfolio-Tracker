@@ -4,9 +4,12 @@ import 'package:crypto_portfolio_tracker/core/shared/widgets/main_wrapper.dart';
 import 'package:crypto_portfolio_tracker/core/utils/page_transitions.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/pages/portfolio_page.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/pages/sell_holding_page.dart';
+import 'package:crypto_portfolio_tracker/features/price_alert/presentation/cubit/price_alert_cubit.dart';
+import 'package:crypto_portfolio_tracker/features/price_alert/presentation/pages/price_alert_page.dart';
+import 'package:crypto_portfolio_tracker/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:crypto_portfolio_tracker/features/settings/presentation/pages/settings_page.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/presentation/pages/watchlist_page.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
@@ -23,7 +26,7 @@ import '../../features/portfolio/presentation/pages/add_holding_page.dart';
 import '../../features/composition/presentation/pages/composition_page.dart';
 import '../constants/app_constants.dart';
 import '../di/injection_container.dart';
-import '../local_storage/storage_service.dart';
+import '../sevices/storage_service.dart';
 
 class AppRouter {
   AppRouter._();
@@ -125,8 +128,6 @@ class AppRouter {
         path: '/portfolio/sell/:coinId',
         pageBuilder: (context, state) {
           final coinId = state.pathParameters['coinId']!;
-          // PortfolioCubit app kökündə (app.dart) provide olunub,
-          // burada ayrıca yaratmırıq — context.read ilə oxunacaq.
           return AppTransitions.push(
             state: state,
             child: SellHoldingPage(coinId: coinId),
@@ -134,10 +135,30 @@ class AppRouter {
         },
       ),
       GoRoute(
+        path: '/price-alerts',
+        builder: (context, state) => BlocProvider(
+          create: (_) => PriceAlertsCubit(storageService: sl<StorageService>()),
+          child: const PriceAlertsSheetListener(child: PriceAlertsPage()),
+        ),
+      ),
+      GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/portfolio/composition',
         pageBuilder: (context, state) =>
             AppTransitions.push(state: state, child: const CompositionPage()),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/settings',
+        pageBuilder: (context, state) {
+          return AppTransitions.push(
+            state: state,
+            child: BlocProvider(
+              create: (_) => sl<SettingsCubit>(),
+              child: const SettingsPage(),
+            ),
+          );
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

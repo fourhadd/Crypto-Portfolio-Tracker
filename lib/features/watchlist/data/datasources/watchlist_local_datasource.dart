@@ -2,7 +2,7 @@
 import 'dart:async';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/local_storage/storage_service.dart';
+import '../../../../core/sevices/storage_service.dart';
 import '../models/watchlist_item_model.dart';
 
 abstract class WatchlistLocalDataSource {

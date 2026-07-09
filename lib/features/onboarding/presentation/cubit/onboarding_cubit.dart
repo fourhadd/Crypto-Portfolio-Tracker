@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/local_storage/storage_service.dart';
+import '../../../../core/sevices/storage_service.dart';
 import '../widgets/onboarding_slide_data.dart';
 import 'onboarding_state.dart';
 

@@ -18,7 +18,11 @@ class AppConstants {
   static const String storageKeyTransactions = 'transactions';
   static const String storageKeyWatchlist = 'watchlist_coin_ids';
   static const String storageKeyAlerts = 'alerts';
-  static const String storageKeyCurrency = 'selected_currency';
   static const String storageKeyThemeMode = 'theme_mode';
   static const String storageKeyOnboardingSeen = 'onboarding_seen';
+  static const String storageKeyCurrency = 'settings_currency';
+  static const String storageKeyRefreshInterval =
+      'settings_refresh_interval_seconds';
+  static const String storageKeyNotificationsEnabled =
+      'settings_notifications_enabled';
 }

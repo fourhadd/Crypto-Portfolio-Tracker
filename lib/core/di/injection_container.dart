@@ -10,6 +10,7 @@ import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/sell
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/watch_portfolio_coins_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/add_holding_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/portfolio_cubit.dart';
+import 'package:crypto_portfolio_tracker/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/data/datasources/watchlist_local_datasource.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/data/repositories/watchlist_repository_impl.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/repositories/watchlist_repository.dart';
@@ -18,7 +19,7 @@ import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/is_c
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/watch_watchlist_coins_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/presentation/cubit/watchlist_cubit.dart';
 import 'package:get_it/get_it.dart';
-import 'package:crypto_portfolio_tracker/core/local_storage/storage_service.dart';
+import 'package:crypto_portfolio_tracker/core/sevices/storage_service.dart';
 import 'package:crypto_portfolio_tracker/core/network/dio_client.dart';
 import 'package:crypto_portfolio_tracker/core/data/datasources/coin_remote_datasource.dart';
 import 'package:crypto_portfolio_tracker/core/data/repositories/coin_repository_impl.dart';
@@ -194,4 +195,5 @@ Future<void> initDependencies() async {
   );
 
   sl.registerFactory<CompareCubit>(() => CompareCubit(getCompareChart: sl()));
+  sl.registerFactory(() => SettingsCubit(storageService: sl()));
 }
