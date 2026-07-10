@@ -28,7 +28,7 @@ class WatchlistListItem extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(18.r),
-        onTap: () => context.push('/coin/${coin.id}'),
+        onTap: () => context.push('/coin/${coin.id}', extra: coin),
         child: Ink(
           decoration: AppGlass.decoration(),
           child: Padding(

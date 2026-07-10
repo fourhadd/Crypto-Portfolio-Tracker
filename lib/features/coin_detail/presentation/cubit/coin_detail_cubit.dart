@@ -2,6 +2,8 @@
 import 'package:crypto_portfolio_tracker/features/coin_detail/domain/entities/chart_point_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/domain/entities/coin_entity.dart';
+import '../../domain/entities/coin_detail_entity_mapper.dart';
 import '../../domain/usecases/get_coin_detail_usecase.dart';
 import '../../domain/usecases/get_coin_chart_usecase.dart';
 import '../../../watchlist/domain/usecases/is_coin_watchlisted_usecase.dart';
@@ -24,16 +26,48 @@ class CoinDetailCubit extends Cubit<CoinDetailState> {
     required this.removeFromWatchlist,
   }) : super(const CoinDetailLoading());
 
-  Future<void> loadCoin(String coinId) async {
-    emit(const CoinDetailLoading());
+  /// Renders [initialCoin]'s price immediately when provided, and keeps
+  /// using its price fields permanently rather than overwriting them
+  /// with the background `/coins/{id}` fetch — only supplementary
+  /// fields (ATH/ATL, supply, rank) come from that fetch.
+  Future<void> loadCoin(String coinId, {CoinEntity? initialCoin}) async {
+    const initialRange = ChartRange.twentyFourHour;
+    final pinnedCoin = (initialCoin != null && initialCoin.id == coinId)
+        ? initialCoin
+        : null;
+
+    if (pinnedCoin != null) {
+      emit(
+        CoinDetailLoaded(
+          coin: pinnedCoin.toCoinDetailEntity(),
+          selectedRange: initialRange,
+          chartPoints: const [],
+          isChartLoading: true,
+          isInWatchlist: false,
+        ),
+      );
+    } else {
+      emit(const CoinDetailLoading());
+    }
 
     final coinResult = await getCoinDetail(coinId: coinId);
     if (isClosed) return;
 
     await coinResult.fold(
-      (failure) async => emit(CoinDetailError(failure.message)),
-      (coin) async {
-        const initialRange = ChartRange.twentyFourHour;
+      (failure) async {
+        // If we already have a pinned Loaded state from initialCoin,
+        // keep showing it rather than replacing good data with an error.
+        if (state is! CoinDetailLoaded) emit(CoinDetailError(failure.message));
+      },
+      (fetchedDetail) async {
+        // Only take supplementary fields from the fresh fetch when we
+        // have a pinned coin; otherwise use it as-is (cold open, e.g.
+        // deep link / price alert tap with no list context).
+        final coin = pinnedCoin == null
+            ? fetchedDetail
+            : pinnedCoin.toCoinDetailEntity().copyWithSupplementalStats(
+                fetchedDetail,
+              );
 
         final chartResult = await getCoinChart(
           coinId: coinId,
@@ -50,7 +84,11 @@ class CoinDetailCubit extends Cubit<CoinDetailState> {
         );
 
         chartResult.fold(
-          (failure) => emit(CoinDetailError(failure.message)),
+          (failure) {
+            if (state is! CoinDetailLoaded) {
+              emit(CoinDetailError(failure.message));
+            }
+          },
           (points) => emit(
             CoinDetailLoaded(
               coin: coin,

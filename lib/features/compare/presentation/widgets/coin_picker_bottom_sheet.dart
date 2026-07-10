@@ -120,7 +120,7 @@ class _CoinPickerBottomSheetState extends State<CoinPickerBottomSheet> {
                         if (state.status == MarketStatus.error) {
                           return Center(
                             child: Text(
-                              state.errorMessage ?? 'Xəta baş verdi',
+                              state.errorMessage ?? 'An error occurred',
                               style: AppTextStyles.bodySmall,
                             ),
                           );

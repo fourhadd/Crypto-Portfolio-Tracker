@@ -5,6 +5,12 @@ enum AlertCondition { above, below }
 class PriceAlert {
   final String id;
   final String symbol;
+
+  /// CoinGecko coin id (e.g. 'bitcoin'), used to match this alert to a
+  /// specific coin instead of its ticker symbol. Nullable to stay
+  /// backward-compatible with alerts persisted before this field
+  /// existed - those fall back to symbol matching (see PriceAlertsCubit).
+  final String? coinId;
   final double targetPrice;
   final AlertCondition condition;
   final bool isActive;
@@ -20,6 +26,7 @@ class PriceAlert {
   const PriceAlert({
     required this.id,
     required this.symbol,
+    this.coinId,
     required this.targetPrice,
     required this.condition,
     this.isActive = true,
@@ -33,6 +40,7 @@ class PriceAlert {
   }) => PriceAlert(
     id: id,
     symbol: symbol,
+    coinId: coinId,
     targetPrice: targetPrice,
     condition: condition,
     isActive: isActive ?? this.isActive,
@@ -44,6 +52,7 @@ class PriceAlert {
   Map<String, dynamic> toJson() => {
     'id': id,
     'symbol': symbol,
+    'coinId': coinId,
     'targetPrice': targetPrice,
     'condition': condition.name,
     'isActive': isActive,
@@ -53,6 +62,7 @@ class PriceAlert {
   factory PriceAlert.fromJson(Map<String, dynamic> json) => PriceAlert(
     id: json['id'] as String,
     symbol: json['symbol'] as String,
+    coinId: json['coinId'] as String?,
     targetPrice: (json['targetPrice'] as num).toDouble(),
     condition: AlertCondition.values.firstWhere(
       (c) => c.name == json['condition'],

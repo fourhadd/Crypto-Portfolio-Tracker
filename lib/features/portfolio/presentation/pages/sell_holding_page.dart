@@ -43,12 +43,8 @@ class SellHoldingPage extends StatelessWidget {
                 if (state.status != PortfolioStatus.loaded) {
                   return (state.status, null);
                 }
-                // Fix #22: previously used `matches.first`, which silently
-                // picked one lot and ignored the rest when a coin had
-                // multiple purchase entries. Fix #21 now merges all
-                // purchases of the same coin into a single weighted-average
-                // lot at write time, so there is at most one match here —
-                // firstWhereOrNull is just a defensive guard against nulls.
+                // firstWhereOrNull is a defensive guard: each coin has at
+                // most one merged lot by this point.
                 final item = state.items.firstWhereOrNull(
                   (i) => i.holding.coinId == coinId,
                 );

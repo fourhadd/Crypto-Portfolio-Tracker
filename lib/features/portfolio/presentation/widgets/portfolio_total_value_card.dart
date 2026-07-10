@@ -2,16 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
+import 'package:crypto_portfolio_tracker/core/utils/number_formatter.dart';
 
 import '../cubit/portfolio_cubit.dart';
 import '../cubit/portfolio_state.dart';
 
 class PortfolioTotalValueCard extends StatelessWidget {
   const PortfolioTotalValueCard({super.key});
-
-  static final _usdFormat = NumberFormat('#,##0.00', 'en_US');
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +31,7 @@ class PortfolioTotalValueCard extends StatelessWidget {
                 state.status == PortfolioStatus.loaded ? state.totalValue : 0.0,
             builder: (context, totalValue) {
               return Text(
-                '\$${_usdFormat.format(totalValue)}',
+                NumberFormatter.formatCurrency(totalValue),
                 style: AppTextStyles.balanceLarge,
               );
             },

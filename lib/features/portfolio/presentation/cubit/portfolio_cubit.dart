@@ -5,25 +5,42 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/domain/entities/coin_entity.dart';
+import '../../../../core/domain/repositories/coin_repository.dart';
 import '../../../../core/sevices/storage_service.dart';
+import '../../../market/presentation/cubit/market_cubit.dart';
+import '../../../market/presentation/cubit/market_state.dart';
+import '../../domain/entities/holding_entity.dart';
+import '../../domain/entities/portfolio_coin_entity.dart';
 import '../../domain/usecases/add_holding_usecase.dart';
 import '../../domain/usecases/remove_holding_usecase.dart';
-import '../../domain/usecases/watch_portfolio_coins_usecase.dart';
+import '../../domain/usecases/watch_portfolio_holdings_usecase.dart';
 import 'portfolio_state.dart';
 
 class PortfolioCubit extends Cubit<PortfolioState> {
-  final WatchPortfolioCoinsUseCase watchPortfolioCoins;
+  final WatchPortfolioHoldingsUseCase watchPortfolioHoldings;
   final AddHoldingUseCase addHoldingUseCase;
   final RemoveHoldingUseCase removeHoldingUseCase;
+  final CoinRepository coinRepository;
+  final MarketCubit marketCubit;
   final StorageService storageService;
 
-  StreamSubscription? _subscription;
+  StreamSubscription<List<HoldingEntity>>? _holdingsSubscription;
+  StreamSubscription<MarketState>? _marketSubscription;
   late final StreamSubscription<String> _currencySubscription;
 
+  List<HoldingEntity> _latestHoldings = const [];
+  String _currency = 'usd';
+
+  bool _isRecomputing = false;
+  bool _recomputeQueued = false;
+
   PortfolioCubit({
-    required this.watchPortfolioCoins,
+    required this.watchPortfolioHoldings,
     required this.addHoldingUseCase,
     required this.removeHoldingUseCase,
+    required this.coinRepository,
+    required this.marketCubit,
     required this.storageService,
     required CurrencyNotifierService currencyNotifier,
   }) : super(const PortfolioState()) {
@@ -33,36 +50,23 @@ class PortfolioCubit extends Cubit<PortfolioState> {
   }
 
   void startWatching({String? vsCurrency}) {
-    final currency =
+    _currency =
         vsCurrency ??
-        storageService.readValue<String>(AppConstants.storageKeyCurrency) ??
+        storageService
+            .readValue<String>(AppConstants.storageKeyCurrency)
+            ?.toLowerCase() ??
         'usd';
 
     emit(state.copyWith(status: PortfolioStatus.loading));
 
-    _subscription?.cancel();
+    _holdingsSubscription?.cancel();
+    _marketSubscription?.cancel();
 
-    _subscription = watchPortfolioCoins(vsCurrency: currency).listen(
-      (result) {
+    _holdingsSubscription = watchPortfolioHoldings().listen(
+      (holdings) {
         if (isClosed) return;
-
-        result.fold(
-          (failure) {
-            if (kDebugMode) {
-              debugPrint('PORTFOLIO FAILURE: ${failure.message}');
-            }
-
-            emit(
-              state.copyWith(
-                status: PortfolioStatus.error,
-                errorMessage: failure.message,
-              ),
-            );
-          },
-          (items) {
-            emit(state.copyWith(status: PortfolioStatus.loaded, items: items));
-          },
-        );
+        _latestHoldings = holdings;
+        _recompute();
       },
       onError: (e, st) {
         if (isClosed) return;
@@ -75,11 +79,75 @@ class PortfolioCubit extends Cubit<PortfolioState> {
         emit(
           state.copyWith(
             status: PortfolioStatus.error,
-            errorMessage: 'Naməlum xəta baş verdi',
+            errorMessage: 'An unknown error occurred',
           ),
         );
       },
     );
+    _marketSubscription = marketCubit.stream.listen((_) => _recompute());
+
+    marketCubit.fetchIfNeeded(vsCurrency: _currency);
+  }
+
+  Future<void> _recompute() async {
+    if (_latestHoldings.isEmpty) {
+      emit(state.copyWith(status: PortfolioStatus.loaded, items: const []));
+      return;
+    }
+
+    if (_isRecomputing) {
+      _recomputeQueued = true;
+      return;
+    }
+    _isRecomputing = true;
+
+    try {
+      final marketById = {
+        for (final coin in marketCubit.state.allCoins) coin.id: coin,
+      };
+
+      final missingIds = _latestHoldings
+          .map((holding) => holding.coinId)
+          .where((id) => !marketById.containsKey(id))
+          .toSet()
+          .toList();
+
+      Map<String, CoinEntity> fetchedById = const {};
+      if (missingIds.isNotEmpty) {
+        final fallbackResult = await coinRepository.getCoinsByIds(
+          ids: missingIds,
+          vsCurrency: _currency,
+        );
+        if (isClosed) return;
+
+        fetchedById = fallbackResult.fold(
+          (failure) {
+            if (kDebugMode) {
+              debugPrint('PORTFOLIO FALLBACK FAILURE: ${failure.message}');
+            }
+            return const {};
+          },
+          (coins) => {for (final coin in coins) coin.id: coin},
+        );
+      }
+
+      final byId = {...marketById, ...fetchedById};
+
+      final items = <PortfolioCoinEntity>[
+        for (final holding in _latestHoldings)
+          if (byId.containsKey(holding.coinId))
+            PortfolioCoinEntity(holding: holding, coin: byId[holding.coinId]!),
+      ];
+
+      if (isClosed) return;
+      emit(state.copyWith(status: PortfolioStatus.loaded, items: items));
+    } finally {
+      _isRecomputing = false;
+      if (_recomputeQueued) {
+        _recomputeQueued = false;
+        unawaited(_recompute());
+      }
+    }
   }
 
   Future<void> addHolding({
@@ -110,7 +178,8 @@ class PortfolioCubit extends Cubit<PortfolioState> {
 
   @override
   Future<void> close() async {
-    await _subscription?.cancel();
+    await _holdingsSubscription?.cancel();
+    await _marketSubscription?.cancel();
     await _currencySubscription.cancel();
     return super.close();
   }

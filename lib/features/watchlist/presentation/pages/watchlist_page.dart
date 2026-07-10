@@ -44,7 +44,7 @@ class WatchlistPage extends StatelessWidget {
                         case WatchlistStatus.error:
                           return Center(
                             child: Text(
-                              state.errorMessage ?? 'Naməlum xəta baş verdi',
+                              state.errorMessage ?? 'An unknown error occurred',
                               style: AppTextStyles.bodyMedium,
                               textAlign: TextAlign.center,
                             ),

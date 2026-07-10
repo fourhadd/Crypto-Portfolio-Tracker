@@ -27,7 +27,7 @@ class MarketCoinListView extends StatelessWidget {
         if (state.status == MarketStatus.error) {
           return Center(
             child: Text(
-              state.errorMessage ?? 'Xəta baş verdi',
+              state.errorMessage ?? 'An error occurred',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.negative,
               ),
@@ -54,7 +54,10 @@ class MarketCoinListView extends StatelessWidget {
                 rank: index + 1,
                 coin: state.coins[index],
                 showSparkline: true,
-                onTap: () => context.push('/coin/${state.coins[index].id}'),
+                onTap: () => context.push(
+                  '/coin/${state.coins[index].id}',
+                  extra: state.coins[index],
+                ),
               ),
             ),
           );

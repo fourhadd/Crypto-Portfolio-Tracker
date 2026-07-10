@@ -4,6 +4,21 @@ import 'package:intl/intl.dart';
 class NumberFormatter {
   NumberFormatter._();
 
+  static const Map<String, String> _symbols = {
+    'usd': '\$',
+    'eur': '€',
+    'gbp': '£',
+    'jpy': '¥',
+    'btc': '₿',
+    'eth': 'Ξ',
+  };
+
+  static String currentSymbol = '\$';
+
+  static void updateCurrency(String currencyCode) {
+    currentSymbol = _symbols[currencyCode.toLowerCase()] ?? currencyCode.toUpperCase();
+  }
+
   static final NumberFormat usdFormat = NumberFormat('#,##0.00', 'en_US');
   static final NumberFormat fourDecimalFormat = NumberFormat('#,##0.0000');
 
@@ -37,14 +52,14 @@ class NumberFormatter {
     final sign = isNegative ? '-' : '';
     final decimalSuffix = decimals > 0 ? ',$decimalPart' : '';
 
-    return '$sign\$$buffer$decimalSuffix';
+    return '$sign$currentSymbol$buffer$decimalSuffix';
   }
 
   static String formatCompactVolume(double value) {
-    if (value >= 1e9) return '\$${(value / 1e9).toStringAsFixed(2)}B';
-    if (value >= 1e6) return '\$${(value / 1e6).toStringAsFixed(2)}M';
-    if (value >= 1e3) return '\$${(value / 1e3).toStringAsFixed(2)}K';
-    return '\$${value.toStringAsFixed(2)}';
+    if (value >= 1e9) return '$currentSymbol${(value / 1e9).toStringAsFixed(2)}B';
+    if (value >= 1e6) return '$currentSymbol${(value / 1e6).toStringAsFixed(2)}M';
+    if (value >= 1e3) return '$currentSymbol${(value / 1e3).toStringAsFixed(2)}K';
+    return '$currentSymbol${value.toStringAsFixed(2)}';
   }
 
   static String formatPercent(double value) {

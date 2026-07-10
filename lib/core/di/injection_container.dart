@@ -10,16 +10,15 @@ import 'package:crypto_portfolio_tracker/features/portfolio/domain/repositories/
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/add_holding_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/remove_holding_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/sell_holding_usecase.dart';
-import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/watch_portfolio_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/portfolio/domain/usecases/watch_portfolio_holdings_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/add_holding_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/portfolio/presentation/cubit/portfolio_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/data/datasources/watchlist_local_datasource.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/data/repositories/watchlist_repository_impl.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/repositories/watchlist_repository.dart';
-import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/get_watchlist_coins_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/is_coin_watchlisted_usecase.dart';
-import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/watch_watchlist_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/watch_watchlist_ids_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/presentation/cubit/watchlist_cubit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:crypto_portfolio_tracker/core/sevices/storage_service.dart';
@@ -37,7 +36,6 @@ import 'package:crypto_portfolio_tracker/features/coin_detail/domain/repositorie
 import 'package:crypto_portfolio_tracker/features/coin_detail/domain/usecases/get_coin_detail_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/coin_detail/domain/usecases/get_coin_chart_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/coin_detail/presentation/cubit/coin_detail_cubit.dart';
-import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/get_watchlist_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/add_to_watchlist_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/watchlist/domain/usecases/remove_from_watchlist_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/compare/data/datasources/compare_remote_datasource.dart';
@@ -96,10 +94,6 @@ Future<void> initDependencies() async {
     () => WatchlistRepositoryImpl(localDataSource: sl()),
   );
 
-  sl.registerLazySingleton<GetWatchlistUseCase>(
-    () => GetWatchlistUseCase(sl()),
-  );
-
   sl.registerLazySingleton<AddToWatchlistUseCase>(
     () => AddToWatchlistUseCase(sl()),
   );
@@ -112,24 +106,15 @@ Future<void> initDependencies() async {
     () => IsCoinWatchlistedUseCase(sl()),
   );
 
-  sl.registerLazySingleton<GetWatchlistCoinsUseCase>(
-    () => GetWatchlistCoinsUseCase(
-      watchlistRepository: sl(),
-      coinRepository: sl(),
-    ),
+  sl.registerLazySingleton<WatchWatchlistIdsUseCase>(
+    () => WatchWatchlistIdsUseCase(watchlistRepository: sl()),
   );
-
-  sl.registerLazySingleton<WatchWatchlistCoinsUseCase>(
-    () => WatchWatchlistCoinsUseCase(
-      watchlistRepository: sl(),
-      coinRepository: sl(),
-    ),
-  );
-
   sl.registerFactory<WatchlistCubit>(
     () => WatchlistCubit(
-      watchWatchlistCoins: sl<WatchWatchlistCoinsUseCase>(),
+      watchWatchlistIds: sl<WatchWatchlistIdsUseCase>(),
       removeFromWatchlist: sl<RemoveFromWatchlistUseCase>(),
+      coinRepository: sl<CoinRepository>(),
+      marketCubit: sl<MarketCubit>(),
       storageService: sl<StorageService>(),
       currencyNotifier: sl<CurrencyNotifierService>(),
     ),
@@ -162,18 +147,17 @@ Future<void> initDependencies() async {
     () => RemoveHoldingUseCase(sl()),
   );
 
-  sl.registerLazySingleton<WatchPortfolioCoinsUseCase>(
-    () => WatchPortfolioCoinsUseCase(
-      portfolioRepository: sl(),
-      coinRepository: sl(),
-    ),
+  sl.registerLazySingleton<WatchPortfolioHoldingsUseCase>(
+    () => WatchPortfolioHoldingsUseCase(portfolioRepository: sl()),
   );
 
   sl.registerLazySingleton<PortfolioCubit>(
     () => PortfolioCubit(
-      watchPortfolioCoins: sl<WatchPortfolioCoinsUseCase>(),
+      watchPortfolioHoldings: sl<WatchPortfolioHoldingsUseCase>(),
       addHoldingUseCase: sl<AddHoldingUseCase>(),
       removeHoldingUseCase: sl<RemoveHoldingUseCase>(),
+      coinRepository: sl<CoinRepository>(),
+      marketCubit: sl<MarketCubit>(),
       storageService: sl<StorageService>(),
       currencyNotifier: sl<CurrencyNotifierService>(),
     ),
@@ -190,14 +174,7 @@ Future<void> initDependencies() async {
     () => OnboardingCubit(storageService: sl()),
   );
 
-  sl.registerFactory<HomeCubit>(
-    () => HomeCubit(
-      sl<GetTopCoinsUseCase>(),
-      sl<StorageService>(),
-      sl<CurrencyNotifierService>(),
-      sl<RefreshIntervalNotifierService>(),
-    ),
-  );
+  sl.registerFactory<HomeCubit>(() => HomeCubit(sl<MarketCubit>()));
   sl.registerLazySingleton<MarketCubit>(
     () => MarketCubit(
       sl<GetTopCoinsUseCase>(),
@@ -230,7 +207,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<PriceAlertsCubit>(
     () => PriceAlertsCubit(
       storageService: sl(),
-      getTopCoinsUseCase: sl(),
+      marketCubit: sl<MarketCubit>(),
       notificationService: sl(),
     ),
   );

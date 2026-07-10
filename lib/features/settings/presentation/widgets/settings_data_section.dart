@@ -52,7 +52,7 @@ class SettingsDataSection extends StatelessWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Export zamanı xəta baş verdi')),
+          const SnackBar(content: Text('An error occurred during export')),
         );
       }
     } finally {

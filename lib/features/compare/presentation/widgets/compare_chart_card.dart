@@ -38,7 +38,7 @@ class CompareChartCard extends StatelessWidget {
                 height: 220.h,
                 child: Center(
                   child: Text(
-                    state.errorMessage ?? 'Xəta baş verdi',
+                    state.errorMessage ?? 'An error occurred',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.negative,
                     ),

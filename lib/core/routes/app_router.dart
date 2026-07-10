@@ -53,9 +53,12 @@ class AppRouter {
         path: '/coin/:coinId',
         pageBuilder: (context, state) {
           final coinId = state.pathParameters['coinId']!;
+          final initialCoin = state.extra is CoinEntity
+              ? state.extra as CoinEntity
+              : null;
           return AppTransitions.push(
             state: state,
-            child: CoinDetailPage(coinId: coinId),
+            child: CoinDetailPage(coinId: coinId, initialCoin: initialCoin),
           );
         },
       ),

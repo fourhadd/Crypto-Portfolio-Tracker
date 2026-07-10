@@ -1,21 +1,22 @@
 // features/alerts/presentation/cubit/price_alerts_cubit.dart
 //
-// Fix (finding #18, Phase 6): this cubit now actually polls prices and
-// fires local notifications instead of only persisting alert records.
-// Every `_pollInterval` it fetches the top coins, checks each *active*
-// alert's symbol/condition/targetPrice against the current price, and
-// fires a local notification the moment the price crosses the target.
-// Once fired, the alert is deactivated (not deleted) so it won't spam
-// the user again - they can re-toggle it on to watch for another
-// crossing. Polling only runs while there's at least one active alert,
-// and respects SettingsCubit's notificationsEnabled flag (read straight
-// from storage so this cubit doesn't need to depend on SettingsCubit).
+// Polls prices via MarketCubit and fires local notifications when an
+// active alert's target price is crossed. Once fired, the alert is
+// deactivated (not deleted) so it won't re-fire until re-toggled on.
+// Checking only runs while there's at least one active alert, and
+// respects the notificationsEnabled flag in storage.
+//
+// Note: relies on MarketCubit's own polling instead of fetching
+// independently, so an alert on a coin outside MarketCubit's top-100
+// won't be checked until that page size changes.
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto_portfolio_tracker/core/constants/app_constants.dart';
-import 'package:crypto_portfolio_tracker/core/domain/usecases/get_top_coins_usecase.dart';
+import 'package:crypto_portfolio_tracker/core/domain/entities/coin_entity.dart';
 import 'package:crypto_portfolio_tracker/core/sevices/notification_service.dart';
+import 'package:crypto_portfolio_tracker/features/market/presentation/cubit/market_cubit.dart';
+import 'package:crypto_portfolio_tracker/features/market/presentation/cubit/market_state.dart';
 import 'package:crypto_portfolio_tracker/features/price_alert/domain/entities/alert_entity.dart';
 import 'package:crypto_portfolio_tracker/features/price_alert/presentation/cubit/price_alert_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,21 +27,19 @@ const String kStorageKeyPriceAlerts = 'price_alerts';
 
 class PriceAlertsCubit extends Cubit<PriceAlertsState> {
   final StorageService storageService;
-  final GetTopCoinsUseCase getTopCoinsUseCase;
+  final MarketCubit marketCubit;
   final NotificationService notificationService;
 
-  static const Duration _pollInterval = Duration(seconds: 30);
-
-  Timer? _pollTimer;
+  StreamSubscription<MarketState>? _marketSubscription;
   bool _isChecking = false;
 
   PriceAlertsCubit({
     required this.storageService,
-    required this.getTopCoinsUseCase,
+    required this.marketCubit,
     required this.notificationService,
   }) : super(const PriceAlertsState()) {
     _load();
-    _syncPolling();
+    _syncWatching();
   }
 
   void _load() {
@@ -53,7 +52,7 @@ class PriceAlertsCubit extends Cubit<PriceAlertsState> {
           .toList();
       emit(state.copyWith(alerts: alerts));
     } catch (_) {
-      // Korlanmış data - saymırıq.
+      // Corrupted data - ignore it.
     }
   }
 
@@ -75,6 +74,7 @@ class PriceAlertsCubit extends Cubit<PriceAlertsState> {
   void closeCreateSheet() => emit(state.copyWith(isCreateSheetOpen: false));
 
   void addAlert({
+    required String coinId,
     required String symbol,
     required double targetPrice,
     required AlertCondition condition,
@@ -82,20 +82,21 @@ class PriceAlertsCubit extends Cubit<PriceAlertsState> {
     final alert = PriceAlert(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       symbol: symbol.toUpperCase(),
+      coinId: coinId,
       targetPrice: targetPrice,
       condition: condition,
     );
     final updated = [...state.alerts, alert];
     emit(state.copyWith(alerts: updated, isCreateSheetOpen: false));
     _persist(updated);
-    _syncPolling();
+    _syncWatching();
   }
 
   void removeAlert(String id) {
     final updated = state.alerts.where((a) => a.id != id).toList();
     emit(state.copyWith(alerts: updated));
     _persist(updated);
-    _syncPolling();
+    _syncWatching();
   }
 
   void toggleAlert(String id, bool isActive) {
@@ -115,103 +116,105 @@ class PriceAlertsCubit extends Cubit<PriceAlertsState> {
         .toList();
     emit(state.copyWith(alerts: updated));
     _persist(updated);
-    _syncPolling();
+    _syncWatching();
   }
 
-  /// Starts or stops the polling timer depending on whether there's
-  /// anything worth watching. Cheap to call after every mutation.
-  void _syncPolling() {
+  /// Starts or stops listening to MarketCubit depending on whether
+  /// there's anything worth watching. Never issues its own network
+  /// request - only asks MarketCubit to fetch if needed, then reacts
+  /// to whatever it emits.
+  void _syncWatching() {
     final hasActiveAlerts = state.alerts.any((a) => a.isActive);
 
-    if (hasActiveAlerts && _pollTimer == null) {
-      _checkAlerts();
-      _pollTimer = Timer.periodic(_pollInterval, (_) => _checkAlerts());
-    } else if (!hasActiveAlerts && _pollTimer != null) {
-      _pollTimer?.cancel();
-      _pollTimer = null;
+    if (hasActiveAlerts) {
+      _marketSubscription ??= marketCubit.stream.listen((marketState) {
+        _checkAlerts(marketState.allCoins);
+      });
+      marketCubit.fetchIfNeeded();
+      if (marketCubit.state.status == MarketStatus.loaded) {
+        _checkAlerts(marketCubit.state.allCoins);
+      }
+    } else {
+      _marketSubscription?.cancel();
+      _marketSubscription = null;
     }
   }
 
-  Future<void> _checkAlerts() async {
-    if (_isChecking) return;
+  Future<void> _checkAlerts(List<CoinEntity> coins) async {
+    if (_isChecking || isClosed) return;
     final activeAlerts = state.alerts.where((a) => a.isActive).toList();
-    if (activeAlerts.isEmpty) return;
+    if (activeAlerts.isEmpty || coins.isEmpty) return;
 
     _isChecking = true;
     try {
-      final result = await getTopCoinsUseCase(
-        vsCurrency: 'usd',
-        page: 1,
-        perPage: 250,
-      );
+      final triggeredIds = <String>{};
+      final armedUpdates = <String, double>{}; // id -> new lastKnownPrice
 
-      await result.fold(
-        (_) async {
-          // Silent failure - offline or rate-limited, try again next tick.
-        },
-        (coins) async {
-          final triggeredIds = <String>{};
-          final armedUpdates = <String, double>{}; // id -> new lastKnownPrice
+      for (final alert in activeAlerts) {
+        // Prefer matching by coin id - symbols aren't unique on
+        // CoinGecko (several coins can share the same ticker), so an
+        // alert on e.g. "SOL" could otherwise silently track the wrong
+        // coin. Alerts created before this field existed have no
+        // coinId, so they fall back to the old symbol match.
+        final coin = alert.coinId != null
+            ? _firstWhereOrNull(coins, (c) => c.id == alert.coinId)
+            : _firstWhereOrNull(
+                coins,
+                (c) => c.symbol.toUpperCase() == alert.symbol.toUpperCase(),
+              );
+        if (coin == null) continue;
 
-          for (final alert in activeAlerts) {
-            final coin = _firstWhereOrNull(
-              coins,
-              (c) => c.symbol.toUpperCase() == alert.symbol.toUpperCase(),
+        final currentPrice = coin.currentPrice;
+
+        bool satisfies(double price) => alert.condition == AlertCondition.above
+            ? price >= alert.targetPrice
+            : price <= alert.targetPrice;
+
+        if (alert.lastKnownPrice == null) {
+          // First check since creation/re-enable: just arm the
+          // baseline, never fire on this pass even if the price
+          // already satisfies the condition.
+          armedUpdates[alert.id] = currentPrice;
+          continue;
+        }
+
+        final wasSatisfied = satisfies(alert.lastKnownPrice!);
+        final isSatisfied = satisfies(currentPrice);
+        final justCrossed = isSatisfied && !wasSatisfied;
+
+        if (justCrossed) {
+          triggeredIds.add(alert.id);
+          if (_notificationsEnabled) {
+            final direction = alert.condition == AlertCondition.above
+                ? 'üstünə çıxdı'
+                : 'altına düşdü';
+            await notificationService.showPriceAlert(
+              id: alert.id.hashCode,
+              title: '${alert.symbol} qiymət xəbərdarlığı',
+              body:
+                  '${alert.symbol} \$${currentPrice.toStringAsFixed(2)} - $direction (hədəf: \$${alert.targetPrice.toStringAsFixed(2)})',
             );
-            if (coin == null) continue;
-
-            final currentPrice = coin.currentPrice;
-
-            bool satisfies(double price) => alert.condition == AlertCondition.above
-                ? price >= alert.targetPrice
-                : price <= alert.targetPrice;
-
-            if (alert.lastKnownPrice == null) {
-              // First check since creation/re-enable: just arm the
-              // baseline, never fire on this pass even if the price
-              // already satisfies the condition.
-              armedUpdates[alert.id] = currentPrice;
-              continue;
-            }
-
-            final wasSatisfied = satisfies(alert.lastKnownPrice!);
-            final isSatisfied = satisfies(currentPrice);
-            final justCrossed = isSatisfied && !wasSatisfied;
-
-            if (justCrossed) {
-              triggeredIds.add(alert.id);
-              if (_notificationsEnabled) {
-                final direction = alert.condition == AlertCondition.above
-                    ? 'üstünə çıxdı'
-                    : 'altına düşdü';
-                await notificationService.showPriceAlert(
-                  id: alert.id.hashCode,
-                  title: '${alert.symbol} qiymət xəbərdarlığı',
-                  body:
-                      '${alert.symbol} \$${currentPrice.toStringAsFixed(2)} - $direction (hədəf: \$${alert.targetPrice.toStringAsFixed(2)})',
-                );
-              }
-            } else {
-              armedUpdates[alert.id] = currentPrice;
-            }
           }
+        } else {
+          armedUpdates[alert.id] = currentPrice;
+        }
+      }
 
-          if (triggeredIds.isNotEmpty || armedUpdates.isNotEmpty) {
-            final updated = state.alerts.map((a) {
-              if (triggeredIds.contains(a.id)) {
-                return a.copyWith(isActive: false, clearLastKnownPrice: true);
-              }
-              if (armedUpdates.containsKey(a.id)) {
-                return a.copyWith(lastKnownPrice: armedUpdates[a.id]);
-              }
-              return a;
-            }).toList();
-            emit(state.copyWith(alerts: updated));
-            _persist(updated);
-            _syncPolling();
+      if (triggeredIds.isNotEmpty || armedUpdates.isNotEmpty) {
+        final updated = state.alerts.map((a) {
+          if (triggeredIds.contains(a.id)) {
+            return a.copyWith(isActive: false, clearLastKnownPrice: true);
           }
-        },
-      );
+          if (armedUpdates.containsKey(a.id)) {
+            return a.copyWith(lastKnownPrice: armedUpdates[a.id]);
+          }
+          return a;
+        }).toList();
+        if (isClosed) return;
+        emit(state.copyWith(alerts: updated));
+        _persist(updated);
+        _syncWatching();
+      }
     } finally {
       _isChecking = false;
     }
@@ -225,9 +228,8 @@ class PriceAlertsCubit extends Cubit<PriceAlertsState> {
   }
 
   @override
-  Future<void> close() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
+  Future<void> close() async {
+    await _marketSubscription?.cancel();
     return super.close();
   }
 }

@@ -116,39 +116,70 @@ class BalanceCard extends StatelessWidget {
   }
 }
 
-class _BalanceAmount extends StatelessWidget {
+class _BalanceAmount extends StatefulWidget {
   final double totalBalance;
 
   const _BalanceAmount({required this.totalBalance});
 
   @override
-  Widget build(BuildContext context) {
-    final formatted = NumberFormatter.formatCurrency(totalBalance);
-    final dotIndex = formatted.lastIndexOf(',');
+  State<_BalanceAmount> createState() => _BalanceAmountState();
+}
 
-    if (dotIndex == -1) {
-      return Text(formatted, style: AppTextStyles.balanceLarge);
+class _BalanceAmountState extends State<_BalanceAmount> {
+  double _previousBalance = 0;
+
+  @override
+  void didUpdateWidget(covariant _BalanceAmount oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.totalBalance != widget.totalBalance) {
+      _previousBalance = oldWidget.totalBalance;
     }
+  }
 
-    final wholePart = formatted.substring(0, dotIndex);
-    final decimalPart = formatted.substring(dotIndex + 1);
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: _previousBalance, end: widget.totalBalance),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        final formatted = NumberFormatter.formatCurrency(value);
+        final symbol = NumberFormatter.currentSymbol;
+        final withoutSymbol = formatted.startsWith(symbol)
+            ? formatted.substring(symbol.length)
+            : formatted;
+        final dotIndex = withoutSymbol.lastIndexOf(',');
 
-    return RichText(
-      text: TextSpan(
-        style: AppTextStyles.balanceLarge,
-        children: [
-          TextSpan(text: wholePart),
-          WidgetSpan(child: SizedBox(width: 6.w)),
-          TextSpan(
-            text: '.$decimalPart',
-            style: AppTextStyles.balanceLarge.copyWith(
-              fontSize: (AppTextStyles.balanceLarge.fontSize ?? 32.sp) * 0.5,
-              color: AppColors.textTertiary,
-              fontWeight: FontWeight.w500,
-            ),
+        final wholePart = dotIndex == -1
+            ? withoutSymbol
+            : withoutSymbol.substring(0, dotIndex);
+        final decimalPart = dotIndex == -1
+            ? null
+            : withoutSymbol.substring(dotIndex + 1);
+
+        return RichText(
+          text: TextSpan(
+            style: AppTextStyles.balanceLarge,
+            children: [
+              TextSpan(text: symbol),
+              WidgetSpan(child: SizedBox(width: 2.w)),
+              TextSpan(text: wholePart),
+              if (decimalPart != null) ...[
+                WidgetSpan(child: SizedBox(width: 6.w)),
+                TextSpan(
+                  text: '.$decimalPart',
+                  style: AppTextStyles.balanceLarge.copyWith(
+                    fontSize:
+                        (AppTextStyles.balanceLarge.fontSize ?? 32.sp) * 0.5,
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -103,7 +103,12 @@ class HomePage extends StatelessWidget {
                   SizedBox(height: 28.h),
                   HomeListHeader(onSeeAllTap: () => context.go('/market')),
                   SizedBox(height: 8.h),
-                  CoinListView(onCoinTap: (id) => context.push('/coin/$id')),
+                  CoinListView(
+                    onCoinTap: (coin) => context.push(
+                      '/coin/${coin.id}',
+                      extra: coin,
+                    ),
+                  ),
                 ],
               ),
             ),

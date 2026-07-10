@@ -53,7 +53,7 @@ class DioClient {
         inner is TimeoutException) {
       return inner as Exception;
     }
-    return ServerException(e.message ?? 'Naməlum xəta');
+    return ServerException(e.message ?? 'Unknown error');
   }
 }
 
@@ -96,13 +96,13 @@ class _ErrorInterceptor extends Interceptor {
             _wrap(
               err,
               const ServerException(
-                'Çox tez-tez sorğu göndərildi (rate limit). Bir az gözlə.',
+                'Too many requests (rate limited). Please wait a moment.',
               ),
             ),
           );
           return;
         }
-        handler.reject(_wrap(err, ServerException('Server xətası: $code')));
+        handler.reject(_wrap(err, ServerException('Server error: $code')));
         return;
       default:
         handler.next(err);

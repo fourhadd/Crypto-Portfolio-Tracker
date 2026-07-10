@@ -11,23 +11,23 @@ abstract class Failure extends Equatable {
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'İnternet bağlantısı yoxdur']);
+  const NetworkFailure([super.message = 'No internet connection']);
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure([super.message = 'Server xətası baş verdi']);
+  const ServerFailure([super.message = 'Server error occurred']);
 }
 
 class TimeoutFailure extends Failure {
-  const TimeoutFailure([super.message = 'Sorğu vaxtı bitdi']);
+  const TimeoutFailure([super.message = 'Request timed out']);
 }
 
 class CacheFailure extends Failure {
-  const CacheFailure([super.message = 'Yaddaşda saxlama xətası']);
+  const CacheFailure([super.message = 'Storage error occurred']);
 }
 
 class UnknownFailure extends Failure {
-  const UnknownFailure([super.message = 'Naməlum xəta baş verdi']);
+  const UnknownFailure([super.message = 'An unknown error occurred']);
 }
 
 class ValidationFailure extends Failure {

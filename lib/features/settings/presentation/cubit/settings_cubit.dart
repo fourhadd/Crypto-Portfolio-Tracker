@@ -4,6 +4,7 @@ import 'package:crypto_portfolio_tracker/core/sevices/refresh_interval_notifier_
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/sevices/storage_service.dart';
+import '../../../../core/utils/number_formatter.dart';
 import 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
@@ -41,14 +42,20 @@ class SettingsCubit extends Cubit<SettingsState> {
         notificationsEnabled: notificationsEnabled,
       ),
     );
+
+    NumberFormatter.updateCurrency(currency);
   }
 
   void setCurrency(String currency) {
+    // Storage-da göstərmək üçün orijinal (böyük hərfli) dəyəri saxlayırıq,
+    // amma API çağırışları (vs_currency) kiçik hərf gözlədiyi üçün
+    // notifier-ə kiçik hərflə göndəririk.
     storageService.writeValue(AppConstants.storageKeyCurrency, currency);
 
     emit(state.copyWith(currency: currency, isCurrencyPickerOpen: false));
 
-    currencyNotifier.notify(currency);
+    NumberFormatter.updateCurrency(currency);
+    currencyNotifier.notify(currency.toLowerCase());
   }
 
   void setRefreshInterval(int seconds) {

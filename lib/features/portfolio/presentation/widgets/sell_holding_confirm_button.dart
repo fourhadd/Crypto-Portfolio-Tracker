@@ -67,7 +67,7 @@ class SellHoldingConfirmButton extends StatelessWidget {
           context.pop();
         } else if (state.status == SellHoldingStatus.failure) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage ?? 'Xəta baş verdi')),
+            SnackBar(content: Text(state.errorMessage ?? 'An error occurred')),
           );
         }
       },

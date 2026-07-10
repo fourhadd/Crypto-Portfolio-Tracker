@@ -19,12 +19,19 @@ import '../widgets/coin_detail_skeleton.dart';
 class CoinDetailPage extends StatelessWidget {
   final String coinId;
 
-  const CoinDetailPage({super.key, required this.coinId});
+  /// The CoinEntity the user just tapped on (from Home/Market/Watchlist/
+  /// Portfolio), if the caller has one on hand. Passing it in lets the
+  /// cubit render that exact price immediately instead of fetching a
+  /// second, independent snapshot from `/coins/{id}` that may not match.
+  final CoinEntity? initialCoin;
+
+  const CoinDetailPage({super.key, required this.coinId, this.initialCoin});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<CoinDetailCubit>()..loadCoin(coinId),
+      create: (_) =>
+          sl<CoinDetailCubit>()..loadCoin(coinId, initialCoin: initialCoin),
       child: const _CoinDetailView(),
     );
   }
@@ -37,13 +44,6 @@ class _CoinDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        // Fix #1: previously a single BlocBuilder wrapped the whole page,
-        // so every emission (chart range change, isChartLoading toggle,
-        // watchlist star) rebuilt the entire scroll view — including the
-        // chart. We only need to rebuild here when the state *type*
-        // changes (Loading -> Loaded -> Error); the child widgets below
-        // already have their own scoped BlocBuilder/buildWhen for their
-        // specific fields.
         child: BlocSelector<CoinDetailCubit, CoinDetailState, Type>(
           selector: (state) => state.runtimeType,
           builder: (context, _) {

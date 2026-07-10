@@ -1,3 +1,4 @@
+// features/market/presentation/cubit/market_cubit.dart
 import 'dart:async';
 
 import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
@@ -33,6 +34,7 @@ class MarketCubit extends Cubit<MarketState> {
       seconds,
     ) {
       _startAutoRefresh(seconds);
+      refreshMarkets();
     });
 
     _startAutoRefresh(_currentRefreshIntervalSeconds());
@@ -50,8 +52,6 @@ class MarketCubit extends Cubit<MarketState> {
     if (seconds <= 0) return;
 
     _autoRefreshTimer = Timer.periodic(Duration(seconds: seconds), (_) {
-      // refreshMarkets already avoids flipping status to loading, so
-      // this won't flash a skeleton over data the user is browsing.
       refreshMarkets();
     });
   }
@@ -67,7 +67,9 @@ class MarketCubit extends Cubit<MarketState> {
   Future<void> fetchMarkets({String? vsCurrency}) async {
     final currency =
         vsCurrency ??
-        storageService.readValue<String>(AppConstants.storageKeyCurrency) ??
+        storageService
+            .readValue<String>(AppConstants.storageKeyCurrency)
+            ?.toLowerCase() ??
         'usd';
 
     emit(state.copyWith(status: MarketStatus.loading));
@@ -92,6 +94,9 @@ class MarketCubit extends Cubit<MarketState> {
           status: MarketStatus.loaded,
           allCoins: coins,
           coins: _filteredCoins(all: coins),
+          // Stamped so equal-looking responses (CoinGecko cache) still
+          // register as a fresh emission and reset "Updated Xs ago".
+          lastFetchedAt: DateTime.now(),
         ),
       ),
     );
@@ -100,7 +105,9 @@ class MarketCubit extends Cubit<MarketState> {
   Future<void> refreshMarkets({String? vsCurrency}) async {
     final currency =
         vsCurrency ??
-        storageService.readValue<String>(AppConstants.storageKeyCurrency) ??
+        storageService
+            .readValue<String>(AppConstants.storageKeyCurrency)
+            ?.toLowerCase() ??
         'usd';
 
     final result = await getTopCoins(
@@ -123,6 +130,8 @@ class MarketCubit extends Cubit<MarketState> {
           status: MarketStatus.loaded,
           allCoins: coins,
           coins: _filteredCoins(all: coins),
+
+          lastFetchedAt: DateTime.now(),
         ),
       ),
     );

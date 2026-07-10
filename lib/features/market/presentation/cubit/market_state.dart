@@ -1,3 +1,4 @@
+// features/market/presentation/cubit/market_state.dart
 import 'package:equatable/equatable.dart';
 import '../../../../core/domain/entities/coin_entity.dart';
 
@@ -13,6 +14,8 @@ class MarketState extends Equatable {
   final double? maxPrice;
   final String? errorMessage;
 
+  final DateTime? lastFetchedAt;
+
   const MarketState({
     this.status = MarketStatus.initial,
     this.coins = const [],
@@ -22,6 +25,7 @@ class MarketState extends Equatable {
     this.minPrice,
     this.maxPrice,
     this.errorMessage,
+    this.lastFetchedAt,
   });
 
   bool get isLoading => status == MarketStatus.loading;
@@ -38,6 +42,7 @@ class MarketState extends Equatable {
     bool clearMinPrice = false,
     bool clearMaxPrice = false,
     String? errorMessage,
+    DateTime? lastFetchedAt,
   }) {
     return MarketState(
       status: status ?? this.status,
@@ -48,6 +53,7 @@ class MarketState extends Equatable {
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
       maxPrice: clearMaxPrice ? null : (maxPrice ?? this.maxPrice),
       errorMessage: errorMessage ?? this.errorMessage,
+      lastFetchedAt: lastFetchedAt ?? this.lastFetchedAt,
     );
   }
 
@@ -61,5 +67,6 @@ class MarketState extends Equatable {
     minPrice,
     maxPrice,
     errorMessage,
+    lastFetchedAt,
   ];
 }

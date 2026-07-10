@@ -4,23 +4,25 @@ import 'package:crypto_portfolio_tracker/core/shared/widgets/core_coin_list_tile
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/domain/entities/coin_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
 
 class CoinListView extends StatelessWidget {
-  final ValueChanged<String> onCoinTap;
+  final ValueChanged<CoinEntity> onCoinTap;
 
   const CoinListView({super.key, required this.onCoinTap});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (previous, current) => previous.status != current.status,
+      buildWhen: (previous, current) =>
+          previous.status != current.status || previous.coins != current.coins,
       builder: (context, state) {
         if (state.status == HomeStatus.error) {
-          return _MessageBox(text: state.errorMessage ?? 'Xəta baş verdi');
+          return _MessageBox(text: state.errorMessage ?? 'An error occurred');
         }
 
         if (state.status == HomeStatus.loaded) {
@@ -37,7 +39,7 @@ class CoinListView extends StatelessWidget {
               rank: index + 1,
               coin: state.coins[index],
               showVolume: true,
-              onTap: () => onCoinTap(state.coins[index].id),
+              onTap: () => onCoinTap(state.coins[index]),
             ),
           );
         }

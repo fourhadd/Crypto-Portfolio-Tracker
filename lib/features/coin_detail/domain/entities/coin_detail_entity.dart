@@ -58,8 +58,7 @@ class CoinDetailEntity extends Equatable {
     ath,
     atl,
     athChangePercentage,
-    // Fix #12: sparkline intentionally excluded — it's fetched once and
-    // rarely changes meaningfully, but a 168-point list comparison ran
-    // on every equality check (e.g. every buildWhen evaluation).
+    // sparkline excluded: 168-point list, expensive to compare on every
+    // equality check.
   ];
 }

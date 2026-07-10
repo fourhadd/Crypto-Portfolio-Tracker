@@ -27,7 +27,7 @@ class PortfolioBody extends StatelessWidget {
         if (state.status == PortfolioStatus.error) {
           return Center(
             child: Text(
-              state.errorMessage ?? 'Xəta baş verdi',
+              state.errorMessage ?? 'An error occurred',
               style: AppTextStyles.bodySmall,
             ),
           );

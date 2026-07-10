@@ -21,7 +21,10 @@ class PortfolioHoldingTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.chip),
-        onTap: () => context.push('/coin/${item.holding.coinId}'),
+        onTap: () => context.push(
+          '/coin/${item.holding.coinId}',
+          extra: item.coin,
+        ),
         child: Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(

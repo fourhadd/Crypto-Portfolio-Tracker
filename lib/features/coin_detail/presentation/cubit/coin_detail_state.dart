@@ -34,8 +34,6 @@ class CoinDetailLoaded extends CoinDetailState {
   final List<ChartPointEntity> chartPoints;
   final bool isChartLoading;
   final bool isInWatchlist;
-  // Fix #25: precomputed once per chartPoints change instead of being
-  // rebuilt from scratch inside _Chart.build() on every rebuild.
   final List<FlSpot> chartSpots;
 
   CoinDetailLoaded({

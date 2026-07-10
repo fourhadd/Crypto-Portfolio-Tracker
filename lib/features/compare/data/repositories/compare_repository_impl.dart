@@ -44,7 +44,7 @@ class CompareRepositoryImpl implements CompareRepository {
       } else if (e.type == DioExceptionType.connectionError) {
         return const Left(NetworkFailure());
       } else {
-        errorMessage = e.message ?? 'Server xətası baş verdi';
+        errorMessage = e.message ?? 'Server error occurred';
       }
       return Left(ServerFailure(errorMessage));
     } catch (e) {

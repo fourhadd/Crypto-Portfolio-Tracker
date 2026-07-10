@@ -48,10 +48,8 @@ class CoinRepositoryImpl implements CoinRepository {
     }
   }
 
-  // Fix #28: DioClient's error interceptor already classifies failures
-  // into NetworkException / TimeoutException / ServerException — this
-  // used to be discarded and collapsed into a single ServerFailure,
-  // so the UI could never distinguish "no internet" from "server error".
+  // Maps DioClient's already-classified exceptions to the matching
+  // Failure type so the UI can distinguish network/timeout/server errors.
   Failure _mapToFailure(Object e) {
     if (e is NetworkException) return NetworkFailure(e.message);
     if (e is TimeoutException) return TimeoutFailure(e.message);

@@ -55,6 +55,7 @@ class _CreateAlertSheetState extends State<CreateAlertSheet> {
     }
 
     context.read<PriceAlertsCubit>().addAlert(
+      coinId: coin.id,
       symbol: coin.symbol,
       targetPrice: price,
       condition: _condition,
