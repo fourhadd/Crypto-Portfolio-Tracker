@@ -17,12 +17,11 @@ class OnboardingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<OnboardingCubit>();
     final bottomSafe = MediaQuery.of(context).padding.bottom;
-    final topSafe = MediaQuery.of(context).padding.top;
 
     return BlocListener<OnboardingCubit, OnboardingState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
-        if (state.status == OnboardingStatus.completed) {
+        if (state.status == OnboardingStatus.completed && context.mounted) {
           context.go('/home');
         }
       },
@@ -33,26 +32,6 @@ class OnboardingPage extends StatelessWidget {
             builder: (context, state) {
               return Stack(
                 children: [
-                  Positioned(
-                    top: topSafe > 0 ? 8.h : 16.h,
-                    right: 20.w,
-                    child: AnimatedOpacity(
-                      opacity: state.isLastSlide ? 0 : 1,
-                      duration: const Duration(milliseconds: 200),
-                      child: IgnorePointer(
-                        ignoring: state.isLastSlide,
-                        child: TextButton(
-                          onPressed: cubit.skip,
-                          child: Text(
-                            'Skip',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   PageView.builder(
                     controller: cubit.pageController,
                     itemCount: onboardingSlides.length,
@@ -76,7 +55,14 @@ class OnboardingPage extends StatelessWidget {
                           width: double.infinity,
                           height: 56.h,
                           child: ElevatedButton(
-                            onPressed: cubit.nextOrFinish,
+                            onPressed: () async {
+                              if (state.isLastSlide) {
+                                await cubit.nextOrFinish();
+                                if (context.mounted) context.go('/home');
+                              } else {
+                                cubit.nextOrFinish();
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.accentAmber,
                               foregroundColor: AppColors.bgBase,

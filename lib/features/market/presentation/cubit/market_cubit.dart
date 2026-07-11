@@ -94,6 +94,7 @@ class MarketCubit extends Cubit<MarketState> {
           status: MarketStatus.loaded,
           allCoins: coins,
           coins: _filteredCoins(all: coins),
+
           lastFetchedAt: DateTime.now(),
         ),
       ),

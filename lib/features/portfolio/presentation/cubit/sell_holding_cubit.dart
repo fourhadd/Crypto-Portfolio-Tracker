@@ -33,6 +33,7 @@ class SellHoldingCubit extends Cubit<SellHoldingState> {
     if (state.isSubmitting) return;
 
     emit(state.copyWith(status: SellHoldingStatus.submitting));
+
     await connectivityCubit.checkNow();
     if (connectivityCubit.state == ConnectivityStatus.offline) {
       if (isClosed) return;

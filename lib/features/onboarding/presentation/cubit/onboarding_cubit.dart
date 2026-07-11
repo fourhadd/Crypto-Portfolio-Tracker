@@ -1,4 +1,5 @@
 // features/onboarding/presentation/cubit/onboarding_cubit.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -54,15 +55,17 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     }
   }
 
-  Future<void> skip() => _finish();
-
   Future<void> _finish() async {
     try {
       await storageService.writeValue(
         AppConstants.storageKeyOnboardingSeen,
         true,
       );
-    } catch (_) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('OnboardingCubit._finish() storage write failed: $e');
+        debugPrint('$st');
+      }
     } finally {
       if (!isClosed) {
         emit(state.copyWith(status: OnboardingStatus.completed));
