@@ -1,35 +1,48 @@
-📱 Crypto Portfolio Tracker
+# 📱 Crypto Portfolio Tracker
 
-A Flutter application for tracking cryptocurrency prices, managing a personal portfolio, watching favorite coins, comparing coins, and setting price alerts — built with Clean Architecture and Cubit (flutter_bloc) state management.
+A Flutter application for tracking cryptocurrency prices, managing a personal portfolio, watching favorite coins, comparing coins, and setting price alerts — built with **Clean Architecture** and **Cubit (flutter_bloc)** state management.
 
-Live market data is powered by the CoinGecko API.
+Live market data is powered by the [CoinGecko API](https://www.coingecko.com/en/api).
 
+---
 
-✨ Features
+## ✨ Features
 
-FeatureDescription🏠 HomeTop coins overview with live prices and 24h change📈 MarketFull, searchable & filterable coin market list🔍 Coin DetailPrice, chart (with selectable ranges), and key stats for a coin⭐ WatchlistSave coins to track without adding them to your portfolio💼 PortfolioAdd/sell holdings, track P&L, view total value & allocation🥧 CompositionVisual breakdown of portfolio allocation (donut chart)⚖️ CompareSide-by-side price chart comparison of two coins🔔 Price AlertsGet notified when a coin crosses a target price⚙️ SettingsCurrency, refresh interval, data export (CSV), and app preferences📡 Offline HandlingApp-wide "no internet" banner + per-screen retry states, and network-gated portfolio actions (see below)
+| Feature | Description |
+|---|---|
+| 🏠 **Home** | Top coins overview with live prices and 24h change |
+| 📈 **Market** | Full, searchable & filterable coin market list |
+| 🔍 **Coin Detail** | Price, chart (with selectable ranges), and key stats for a coin |
+| ⭐ **Watchlist** | Save coins to track without adding them to your portfolio |
+| 💼 **Portfolio** | Add/sell holdings, track P&L, view total value & allocation |
+| 🥧 **Composition** | Visual breakdown of portfolio allocation (donut chart) |
+| ⚖️ **Compare** | Side-by-side price chart comparison of two coins |
+| 🔔 **Price Alerts** | Get notified when a coin crosses a target price |
+| ⚙️ **Settings** | Currency, refresh interval, data export (CSV), and app preferences |
+| 📡 **Offline Handling** | App-wide "no internet" banner + per-screen retry states, and network-gated portfolio actions (see below) |
 
+---
 
-🛠 Tech Stack
+## 🛠 Tech Stack
 
+- **Flutter** (Dart)
+- **flutter_bloc** — state management (Cubit pattern)
+- **get_it** — dependency injection (service locator)
+- **go_router** — declarative navigation/routing
+- **dio** — HTTP client for the CoinGecko API
+- **equatable** — value-based state comparisons
+- **flutter_screenutil** — responsive sizing
+- **cached_network_image** — coin icon caching
+- **fl_chart** — price & composition charts
+- Local persistence via `StorageService` (SharedPreferences-based) for portfolio, watchlist, and settings — **no backend/server**, all personal data lives on-device
 
-Flutter (Dart)
-flutter_bloc — state management (Cubit pattern)
-get_it — dependency injection (service locator)
-go_router — declarative navigation/routing
-dio — HTTP client for the CoinGecko API
-equatable — value-based state comparisons
-flutter_screenutil — responsive sizing
-cached_network_image — coin icon caching
-fl_chart — price & composition charts
-Local persistence via StorageService (SharedPreferences-based) for portfolio, watchlist, and settings — no backend/server, all personal data lives on-device
+---
 
+## 🏗 Architecture
 
+The project follows **Clean Architecture**, split per feature into three layers:
 
-🏗 Architecture
-
-The project follows Clean Architecture, split per feature into three layers:
-
+```
 feature/
 ├── data/           # Talks to the outside world (API, local storage)
 │   ├── datasources/    → raw API/storage calls
@@ -43,33 +56,32 @@ feature/
     ├── cubit/          → state management (Cubit + State)
     ├── pages/          → full screens
     └── widgets/        → screen-specific reusable widgets
+```
 
-Data flow: UI → Cubit → UseCase → Repository (interface) → RepositoryImpl → DataSource → API/Storage, and back up the same chain with the result.
+**Data flow:** `UI → Cubit → UseCase → Repository (interface) → RepositoryImpl → DataSource → API/Storage`, and back up the same chain with the result.
 
-Shared code that multiple features depend on lives in core/ (see file structure below), so features stay decoupled from each other and only depend on core.
+Shared code that multiple features depend on lives in `core/` (see file structure below), so features stay decoupled from each other and only depend on `core`.
 
-State Management (Cubit)
+### State Management (Cubit)
 
+- Every feature's UI state lives in an immutable `XState extends Equatable` class with a `status` enum (`initial/loading/loaded/error`) and a `copyWith`.
+- The matching `XCubit extends Cubit<XState>` holds the logic: it calls use cases and `emit()`s new state — never mutates state in place.
+- UI listens via `BlocBuilder` (rebuild), `BlocSelector` (rebuild on a slice of state, for performance), `BlocListener` (side effects like SnackBars/navigation, no rebuild), or `BlocConsumer` (both).
+- Cubits are created through `get_it` (`sl<XCubit>()`) and provided locally to a screen via `BlocProvider`, or app-wide via `MultiBlocProvider` in `app/app.dart` when multiple screens need the same state (e.g. `PortfolioCubit`, `ConnectivityCubit`).
+- Some cubits compose others instead of duplicating logic — e.g. `HomeCubit` subscribes to `MarketCubit`'s stream rather than re-fetching the market list itself.
 
-Every feature's UI state lives in an immutable XState extends Equatable class with a status enum (initial/loading/loaded/error) and a copyWith.
-The matching XCubit extends Cubit<XState> holds the logic: it calls use cases and emit()s new state — never mutates state in place.
-UI listens via BlocBuilder (rebuild), BlocSelector (rebuild on a slice of state, for performance), BlocListener (side effects like SnackBars/navigation, no rebuild), or BlocConsumer (both).
-Cubits are created through get_it (sl<XCubit>()) and provided locally to a screen via BlocProvider, or app-wide via MultiBlocProvider in app/app.dart when multiple screens need the same state (e.g. PortfolioCubit, ConnectivityCubit).
-Some cubits compose others instead of duplicating logic — e.g. HomeCubit subscribes to MarketCubit's stream rather than re-fetching the market list itself.
+### Offline / Connectivity Handling
 
+- `ConnectivityCubit` (app-wide singleton) polls connectivity every few seconds and can also be notified instantly by `DioClient` the moment a request fails.
+- `ConnectivityBanner` wraps the whole app (in `app/app.dart`) and slides a "No internet connection" banner over **any** screen when offline, auto-dismissing after a few seconds.
+- `CoreNetworkErrorView` is a shared per-screen error state (icon + message + Retry button) used consistently across Home, Market, Coin Detail, Watchlist, Portfolio, and Compare.
+- Actions that must not silently "succeed" while offline (adding/selling a holding) re-check connectivity right before submitting and block with a clear error if there's no connection.
 
-Offline / Connectivity Handling
+---
 
+## 📂 File Structure
 
-ConnectivityCubit (app-wide singleton) polls connectivity every few seconds and can also be notified instantly by DioClient the moment a request fails.
-ConnectivityBanner wraps the whole app (in app/app.dart) and slides a "No internet connection" banner over any screen when offline, auto-dismissing after a few seconds.
-CoreNetworkErrorView is a shared per-screen error state (icon + message + Retry button) used consistently across Home, Market, Coin Detail, Watchlist, Portfolio, and Compare.
-Actions that must not silently "succeed" while offline (adding/selling a holding) re-check connectivity right before submitting and block with a clear error if there's no connection.
-
-
-
-📂 File Structure
-
+```
 lib/
 ├── main.dart                          # App entry point, service init
 ├── app/
@@ -119,3 +131,23 @@ lib/
     # (market, composition, onboarding have presentation/ only — they reuse
     #  core's coin data or hold purely local UI state; price_alert has
     #  domain/ + presentation/ but persists via core's StorageService)
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Flutter SDK (stable channel)
+- Dart SDK (bundled with Flutter)
+- An IDE (VS Code / Android Studio) with the Flutter/Dart plugins
+
+### Installation
+
+```bash
+git clone https://github.com/<your-username>/<your-repo>.git
+cd <your-repo>
+flutter pub get
+flutter run
+```
+
