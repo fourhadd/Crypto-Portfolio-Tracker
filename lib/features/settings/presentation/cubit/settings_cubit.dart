@@ -47,9 +47,6 @@ class SettingsCubit extends Cubit<SettingsState> {
   }
 
   void setCurrency(String currency) {
-    // Storage-da göstərmək üçün orijinal (böyük hərfli) dəyəri saxlayırıq,
-    // amma API çağırışları (vs_currency) kiçik hərf gözlədiyi üçün
-    // notifier-ə kiçik hərflə göndəririk.
     storageService.writeValue(AppConstants.storageKeyCurrency, currency);
 
     emit(state.copyWith(currency: currency, isCurrencyPickerOpen: false));

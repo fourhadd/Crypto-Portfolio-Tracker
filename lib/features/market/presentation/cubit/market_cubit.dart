@@ -94,8 +94,6 @@ class MarketCubit extends Cubit<MarketState> {
           status: MarketStatus.loaded,
           allCoins: coins,
           coins: _filteredCoins(all: coins),
-          // Stamped so equal-looking responses (CoinGecko cache) still
-          // register as a fresh emission and reset "Updated Xs ago".
           lastFetchedAt: DateTime.now(),
         ),
       ),

@@ -1,3 +1,4 @@
+// features/portfolio/presentation/cubit/add_holding_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:crypto_portfolio_tracker/core/domain/entities/coin_entity.dart';
 import 'package:crypto_portfolio_tracker/core/shared/cubit/connectivity_cubit.dart';
@@ -35,8 +36,6 @@ class AddHoldingCubit extends Cubit<AddHoldingState> {
 
     emit(state.copyWith(status: AddHoldingStatus.submitting));
 
-    // Re-check right before submitting so a stale "online" status from a
-    // few seconds ago doesn't let the purchase through.
     await connectivityCubit.checkNow();
     if (connectivityCubit.state == ConnectivityStatus.offline) {
       if (isClosed) return;

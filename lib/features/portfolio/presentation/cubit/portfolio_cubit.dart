@@ -1,3 +1,4 @@
+// features/portfolio/presentation/cubit/portfolio_cubit.dart
 import 'dart:async';
 
 import 'package:crypto_portfolio_tracker/core/sevices/currency_notifier_service.dart';
@@ -120,15 +121,12 @@ class PortfolioCubit extends Cubit<PortfolioState> {
         );
         if (isClosed) return;
 
-        fetchedById = fallbackResult.fold(
-          (failure) {
-            if (kDebugMode) {
-              debugPrint('PORTFOLIO FALLBACK FAILURE: ${failure.message}');
-            }
-            return const {};
-          },
-          (coins) => {for (final coin in coins) coin.id: coin},
-        );
+        fetchedById = fallbackResult.fold((failure) {
+          if (kDebugMode) {
+            debugPrint('PORTFOLIO FALLBACK FAILURE: ${failure.message}');
+          }
+          return const {};
+        }, (coins) => {for (final coin in coins) coin.id: coin});
       }
 
       final byId = {...marketById, ...fetchedById};
