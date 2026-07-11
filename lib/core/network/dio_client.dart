@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 
 import '../constants/api_constants.dart';
 import '../errors/exceptions.dart';
+import '../di/injection_container.dart';
+import '../shared/cubit/connectivity_cubit.dart';
 
 class DioClient {
   late final Dio dio;
@@ -84,9 +86,11 @@ class _ErrorInterceptor extends Interceptor {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+        _notifyConnectivityFailure();
         handler.reject(_wrap(err, const TimeoutException()));
         return;
       case DioExceptionType.connectionError:
+        _notifyConnectivityFailure();
         handler.reject(_wrap(err, const NetworkException()));
         return;
       case DioExceptionType.badResponse:
@@ -106,6 +110,17 @@ class _ErrorInterceptor extends Interceptor {
         return;
       default:
         handler.next(err);
+    }
+  }
+
+  void _notifyConnectivityFailure() {
+    try {
+      if (sl.isRegistered<ConnectivityCubit>()) {
+        sl<ConnectivityCubit>().reportFailure();
+      }
+    } catch (_) {
+      // DI not ready yet (e.g. very first request during app bootstrap) —
+      // the periodic poll will still catch it a moment later.
     }
   }
 

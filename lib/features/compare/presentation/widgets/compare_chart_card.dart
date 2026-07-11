@@ -8,6 +8,7 @@ import '../cubit/compare_cubit.dart';
 import '../cubit/compare_state.dart';
 import 'compare_line_chart.dart';
 import 'chart_legend.dart';
+import '../../../../core/shared/widgets/core_network_error_view.dart';
 
 class CompareChartCard extends StatelessWidget {
   const CompareChartCard({super.key});
@@ -36,14 +37,10 @@ class CompareChartCard extends StatelessWidget {
             case CompareStatus.error:
               return SizedBox(
                 height: 220.h,
-                child: Center(
-                  child: Text(
-                    state.errorMessage ?? 'An error occurred',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.negative,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                child: CoreNetworkErrorView(
+                  message: state.errorMessage,
+                  onRetry: () => context.read<CompareCubit>().refresh(),
+                  padding: EdgeInsets.zero,
                 ),
               );
 

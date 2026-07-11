@@ -1,14 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:crypto_portfolio_tracker/core/domain/entities/coin_entity.dart';
+import 'package:crypto_portfolio_tracker/core/shared/cubit/connectivity_cubit.dart';
 
 import '../../domain/usecases/add_holding_usecase.dart';
 import 'add_holding_state.dart';
 
 class AddHoldingCubit extends Cubit<AddHoldingState> {
   final AddHoldingUseCase addHoldingUseCase;
+  final ConnectivityCubit connectivityCubit;
 
-  AddHoldingCubit({required this.addHoldingUseCase})
-    : super(AddHoldingState.initial());
+  AddHoldingCubit({
+    required this.addHoldingUseCase,
+    required this.connectivityCubit,
+  }) : super(AddHoldingState.initial());
 
   void selectCoin(CoinEntity coin) {
     emit(state.copyWith(coin: coin, buyPrice: coin.currentPrice));
@@ -31,6 +35,21 @@ class AddHoldingCubit extends Cubit<AddHoldingState> {
 
     emit(state.copyWith(status: AddHoldingStatus.submitting));
 
+    // Re-check right before submitting so a stale "online" status from a
+    // few seconds ago doesn't let the purchase through.
+    await connectivityCubit.checkNow();
+    if (connectivityCubit.state == ConnectivityStatus.offline) {
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          status: AddHoldingStatus.failure,
+          errorMessage:
+              'No internet connection. Please check your Wi-Fi/mobile data and try again.',
+        ),
+      );
+      return;
+    }
+
     try {
       await addHoldingUseCase(
         coinId: state.coin!.id,
@@ -45,7 +64,7 @@ class AddHoldingCubit extends Cubit<AddHoldingState> {
       emit(
         state.copyWith(
           status: AddHoldingStatus.failure,
-          errorMessage: 'error in add holding time',
+          errorMessage: 'Failed to add holding. Please try again.',
         ),
       );
     }

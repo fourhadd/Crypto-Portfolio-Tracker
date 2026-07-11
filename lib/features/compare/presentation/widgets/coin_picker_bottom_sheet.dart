@@ -7,6 +7,7 @@ import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
 import 'package:crypto_portfolio_tracker/core/domain/entities/coin_entity.dart';
 import 'package:crypto_portfolio_tracker/features/market/presentation/cubit/market_cubit.dart';
 import 'package:crypto_portfolio_tracker/features/market/presentation/cubit/market_state.dart';
+import 'package:crypto_portfolio_tracker/core/shared/widgets/core_network_error_view.dart';
 
 class CoinPickerBottomSheet extends StatefulWidget {
   const CoinPickerBottomSheet({super.key});
@@ -118,11 +119,10 @@ class _CoinPickerBottomSheetState extends State<CoinPickerBottomSheet> {
                           curr.status == MarketStatus.error,
                       builder: (context, state) {
                         if (state.status == MarketStatus.error) {
-                          return Center(
-                            child: Text(
-                              state.errorMessage ?? 'An error occurred',
-                              style: AppTextStyles.bodySmall,
-                            ),
+                          return CoreNetworkErrorView(
+                            message: state.errorMessage,
+                            onRetry: () =>
+                                context.read<MarketCubit>().fetchMarkets(),
                           );
                         }
 

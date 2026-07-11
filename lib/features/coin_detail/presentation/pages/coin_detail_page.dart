@@ -15,6 +15,7 @@ import '../widgets/coin_detail_chart.dart';
 import '../widgets/coin_detail_stats_grid.dart';
 import '../widgets/coin_detail_action_buttons.dart';
 import '../widgets/coin_detail_skeleton.dart';
+import '../../../../core/shared/widgets/core_network_error_view.dart';
 
 class CoinDetailPage extends StatelessWidget {
   final String coinId;
@@ -32,13 +33,16 @@ class CoinDetailPage extends StatelessWidget {
     return BlocProvider(
       create: (_) =>
           sl<CoinDetailCubit>()..loadCoin(coinId, initialCoin: initialCoin),
-      child: const _CoinDetailView(),
+      child: _CoinDetailView(coinId: coinId, initialCoin: initialCoin),
     );
   }
 }
 
 class _CoinDetailView extends StatelessWidget {
-  const _CoinDetailView();
+  final String coinId;
+  final CoinEntity? initialCoin;
+
+  const _CoinDetailView({required this.coinId, this.initialCoin});
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +58,13 @@ class _CoinDetailView extends StatelessWidget {
             }
 
             if (state is CoinDetailError) {
-              return Center(child: Text(state.message));
+              return CoreNetworkErrorView(
+                message: state.message,
+                onRetry: () => context.read<CoinDetailCubit>().loadCoin(
+                  coinId,
+                  initialCoin: initialCoin,
+                ),
+              );
             }
 
             if (state is CoinDetailLoaded) {

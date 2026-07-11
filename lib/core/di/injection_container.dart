@@ -43,12 +43,14 @@ import 'package:crypto_portfolio_tracker/features/compare/data/repositories/comp
 import 'package:crypto_portfolio_tracker/features/compare/domain/repositories/compare_repository.dart';
 import 'package:crypto_portfolio_tracker/features/compare/domain/usecases/get_compare_chart_usecase.dart';
 import 'package:crypto_portfolio_tracker/features/compare/presentation/cubit/compare_cubit.dart';
+import 'package:crypto_portfolio_tracker/core/shared/cubit/connectivity_cubit.dart';
 
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   sl.registerLazySingleton<DioClient>(() => DioClient());
   sl.registerLazySingleton<StorageService>(() => StorageService());
+  sl.registerLazySingleton<ConnectivityCubit>(() => ConnectivityCubit());
   sl.registerLazySingleton<CurrencyNotifierService>(
     () => CurrencyNotifierService(),
   );
@@ -163,7 +165,10 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerFactory<AddHoldingCubit>(
-    () => AddHoldingCubit(addHoldingUseCase: sl()),
+    () => AddHoldingCubit(
+      addHoldingUseCase: sl(),
+      connectivityCubit: sl<ConnectivityCubit>(),
+    ),
   );
   sl.registerLazySingleton<SellHoldingUseCase>(() => SellHoldingUseCase(sl()));
   // ===== Composition feature =====

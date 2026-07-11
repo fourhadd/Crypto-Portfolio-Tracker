@@ -6,6 +6,7 @@ import 'package:crypto_portfolio_tracker/core/theme/app_theme.dart';
 import '../cubit/portfolio_cubit.dart';
 import '../cubit/portfolio_state.dart';
 import 'portfolio_empty_state.dart';
+import '../../../../core/shared/widgets/core_network_error_view.dart';
 import 'portfolio_holdings_list.dart';
 
 class PortfolioBody extends StatelessWidget {
@@ -25,11 +26,9 @@ class PortfolioBody extends StatelessWidget {
         }
 
         if (state.status == PortfolioStatus.error) {
-          return Center(
-            child: Text(
-              state.errorMessage ?? 'An error occurred',
-              style: AppTextStyles.bodySmall,
-            ),
+          return CoreNetworkErrorView(
+            message: state.errorMessage,
+            onRetry: () => context.read<PortfolioCubit>().startWatching(),
           );
         }
 

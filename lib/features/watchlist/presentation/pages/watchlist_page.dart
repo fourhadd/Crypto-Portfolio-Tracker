@@ -11,6 +11,7 @@ import '../cubit/watchlist_state.dart';
 import '../widgets/watchlist_empty_state.dart';
 import '../widgets/watchlist_header.dart';
 import '../widgets/watchlist_list.dart';
+import '../../../../core/shared/widgets/core_network_error_view.dart';
 
 class WatchlistPage extends StatelessWidget {
   const WatchlistPage({super.key});
@@ -42,12 +43,10 @@ class WatchlistPage extends StatelessWidget {
                             ),
                           );
                         case WatchlistStatus.error:
-                          return Center(
-                            child: Text(
-                              state.errorMessage ?? 'An unknown error occurred',
-                              style: AppTextStyles.bodyMedium,
-                              textAlign: TextAlign.center,
-                            ),
+                          return CoreNetworkErrorView(
+                            message: state.errorMessage,
+                            onRetry: () =>
+                                context.read<WatchlistCubit>().startWatching(),
                           );
                         case WatchlistStatus.loaded:
                           if (state.coins.isEmpty) {

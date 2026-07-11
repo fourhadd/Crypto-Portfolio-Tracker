@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/shared/widgets/core_coin_list_tile.dart';
+import '../../../../core/shared/widgets/core_network_error_view.dart';
 import '../../../home/presentation/widgets/coin_list_skeleton.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -25,13 +26,9 @@ class MarketCoinListView extends StatelessWidget {
         }
 
         if (state.status == MarketStatus.error) {
-          return Center(
-            child: Text(
-              state.errorMessage ?? 'An error occurred',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.negative,
-              ),
-            ),
+          return CoreNetworkErrorView(
+            message: state.errorMessage,
+            onRetry: () => context.read<MarketCubit>().fetchMarkets(),
           );
         }
 

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/shared/cubit/connectivity_cubit.dart';
 import '../../domain/entities/portfolio_coin_entity.dart';
 import '../../domain/usecases/sell_holding_usecase.dart';
 import '../cubit/portfolio_cubit.dart';
@@ -77,6 +78,7 @@ class SellHoldingPage extends StatelessWidget {
                 return BlocProvider(
                   create: (_) => SellHoldingCubit(
                     sellHoldingUseCase: sl<SellHoldingUseCase>(),
+                    connectivityCubit: sl<ConnectivityCubit>(),
                     holdingId: item.holding.id,
                     maxAmount: item.holding.amount,
                   ),

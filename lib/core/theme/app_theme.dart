@@ -127,6 +127,19 @@ class AppTheme {
               : AppColors.bgElevatedBorder,
         ),
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.bgSurfaceSolid,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textPrimary,
+        ),
+        actionTextColor: AppColors.accentAmber,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.chip),
+          side: const BorderSide(color: AppColors.bgElevatedBorder, width: 1),
+        ),
+        elevation: 0,
+      ),
     );
   }
 }

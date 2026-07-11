@@ -1,6 +1,7 @@
 // features/home/presentation/widgets/coin_list_view.dart
 import 'package:crypto_portfolio_tracker/features/home/presentation/widgets/coin_list_skeleton.dart';
 import 'package:crypto_portfolio_tracker/core/shared/widgets/core_coin_list_tile.dart';
+import 'package:crypto_portfolio_tracker/core/shared/widgets/core_network_error_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,7 +23,10 @@ class CoinListView extends StatelessWidget {
           previous.status != current.status || previous.coins != current.coins,
       builder: (context, state) {
         if (state.status == HomeStatus.error) {
-          return _MessageBox(text: state.errorMessage ?? 'An error occurred');
+          return CoreNetworkErrorView(
+            message: state.errorMessage,
+            onRetry: () => context.read<HomeCubit>().fetchTopCoins(),
+          );
         }
 
         if (state.status == HomeStatus.loaded) {
